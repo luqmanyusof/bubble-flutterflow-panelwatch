@@ -1,0 +1,18 @@
+rules_version = '2';
+// PanelWatch training - TEST MODE: anyone with the project ID can read and write
+// every collection except `config` (the simulator switch, which only the trainer changes
+// from the Firebase console - the console and the Cloud Function ignore these rules).
+// Simulated data only. Change the date to a few days after the course ends.
+//
+// Firestore OR's matching rules together, so `config` must be excluded from the general
+// rule itself - a separate "allow write: if false" block would NOT stop a write the
+// general rule allows.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{collection}/{doc} {
+      allow read: if request.time < timestamp.date(2026, 12, 31);
+      allow write: if collection != 'config'
+                   && request.time < timestamp.date(2026, 12, 31);
+    }
+  }
+}
