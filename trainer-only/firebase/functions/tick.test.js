@@ -99,6 +99,23 @@ test('an unknown event or device is ignored but still marked done', async () => 
   assert.strictEqual(all('alerts').length, alertsBefore);
 });
 
+test('new devices start enabled; a device without the field gets enabled = true', async () => {
+  assert.ok(all('devices').every((d) => d.enabled === true));
+  const { enabled, ...rest } = store.get('devices/PNL-03');
+  store.set('devices/PNL-03', rest);
+  await _tick(0);
+  assert.strictEqual(store.get('devices/PNL-03').enabled, true);
+});
+
+test('a panel disabled by the admin stays disabled and keeps getting readings', async () => {
+  store.set('devices/PNL-02', { ...store.get('devices/PNL-02'), enabled: false });
+  const before = all('readings').filter((r) => r.device_code === 'PNL-02').length;
+  await _tick(0);
+  assert.strictEqual(store.get('devices/PNL-02').enabled, false);
+  assert.strictEqual(all('readings').filter((r) => r.device_code === 'PNL-02').length, before + 1);
+  store.set('devices/PNL-02', { ...store.get('devices/PNL-02'), enabled: true });
+});
+
 test('a limit changed by the admin applies on the next tick', async () => {
   store.set('devices/PNL-01', { ...store.get('devices/PNL-01'), max_temperature: 20 });
   await _tick(0);

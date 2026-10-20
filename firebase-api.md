@@ -1,7 +1,8 @@
 # PanelWatch — Firebase Data & API Reference
 
 *Everything you need to know about the database behind PanelWatch. You don't set anything up in
-Firebase — the trainer runs the project. Your apps only read from it.*
+Firebase — the trainer runs the project. Your apps read from it; the Bubble admin also switches panels
+on and off.*
 
 **Firebase** is Google's app platform. PanelWatch uses two parts of it:
 - **Cloud Firestore** — a cloud database that stores data as **documents** grouped into
@@ -13,9 +14,9 @@ Firebase — the trainer runs the project. Your apps only read from it.*
 |---|---|
 | **Project ID** | `panelwatch-class` |
 | **Shared by** | the whole class — everyone sees the same three panels and readings |
-| **Writes** | only the simulator (and the trainer, from the Firebase console) |
-| **Reads** | Bubble admin (REST API), FlutterFlow (built-in Firebase connection) |
-| **Security** | **no sign-in** — anyone who knows the project ID can read it, so the rules refuse bulk reads and deletes (section 4.4). Open until the end of 23 Oct 2026. Simulated data only — never real names, phone numbers or company data |
+| **Writes** | the simulator; the Bubble admin, only a panel's `enabled` switch; the trainer, from the Firebase console |
+| **Reads** | Bubble admin and FlutterFlow mobile — both over the REST API (section 4) |
+| **Security** | **no sign-in** — anyone who knows the project ID can read it, so the rules refuse bulk reads, deletes and every change except `enabled` (section 4.4). Open until the end of 23 Oct 2026. Simulated data only — never real names, phone numbers or company data |
 
 ---
 
@@ -49,6 +50,7 @@ Your apps use two collections: `devices` and `readings`.
 | `code` | string | `PNL-01` |
 | `name` | string | `Main Panel Level 1` |
 | `location` | string | `Factory A, Shah Alam` |
+| `enabled` | boolean | `true` — the admin's switch. `false` = the client app hides this panel's readings |
 | `max_temperature` | number | `45` (°C) |
 | `max_humidity` | number | `85` (%RH) |
 | `min_voltage` | number | `207` (V) |
@@ -64,6 +66,10 @@ Your apps use two collections: `devices` and `readings`.
 
 The six `max_…` / `min_…` fields are the panel's **limits**. The simulator sets them; only the
 trainer changes them.
+
+`enabled` belongs to the admin. The simulator sets it to `true` once, for a new panel, and never
+changes it after that. A disabled panel **still gets readings** — the admin sees everything; only the
+client app hides them.
 
 ### 2.2 `readings` — one document per reading
 **Document ID = generated automatically.**
@@ -137,9 +143,10 @@ the number.
 | 1 | List the panels | `GET /devices` | — |
 | 2 | Get one panel | `GET /devices/PNL-01` | — |
 | 3 | Last 20 readings of a panel | `POST :runQuery` | below |
+| 4 | Enable or disable a panel | `PATCH /devices/PNL-01?updateMask.fieldPaths=enabled` | below |
 
 `:runQuery` has **no slash** before it: `…/documents:runQuery`. It's a POST because you **send** the
-search; it still only reads.
+search; it still only reads. Call 4 is the only one that **writes**.
 
 **Body — last 20 readings of one panel**
 ```json
@@ -151,6 +158,13 @@ search; it still only reads.
 } }
 ```
 
+**Body — enable or disable** (`true` or `false`, without quotes)
+```json
+{ "fields": { "enabled": { "booleanValue": false } } }
+```
+`updateMask.fieldPaths=enabled` makes the PATCH change that one field. Without it, PATCH would replace
+the whole panel with this body — the rules refuse that.
+
 ### 4.3 What comes back
 - **GET a list** (`/devices`) returns `{ "documents": [ { "name": "…", "fields": { … } }, … ] }`.
 - **GET one** returns one document: `{ "name": "projects/…/documents/devices/PNL-01", "fields": { … } }`.
@@ -158,10 +172,13 @@ search; it still only reads.
   `[ { "document": { "name": "…", "fields": { … } }, "readTime": "…" }, … ]`.
   If nothing matches (e.g. a panel code that doesn't exist), the list has **one item with only
   `readTime`** and no `document` — filter it out.
+- **PATCH** returns the whole panel after the change, like GET one.
 
 ### 4.4 Rules worth remembering
 - **Searches are capped.** A search for more than **50** documents — or with no `limit` — returns
   **`PERMISSION_DENIED`**. So does any delete. It stops anyone downloading the whole history.
+- **One change is allowed:** a panel's `enabled`, to `true` or `false`. Any other field, text instead
+  of `true`/`false`, or a PATCH without `updateMask` returns **`PERMISSION_DENIED`**.
 - **Sorted searches need an index.** The readings search filters on one field and sorts on another;
   the trainer created that index. Any new combination fails with **`FAILED_PRECONDITION: The query
   requires an index`**.
@@ -170,17 +187,21 @@ search; it still only reads.
 ---
 
 ## 5. In FlutterFlow (Day 2)
-FlutterFlow doesn't use the REST API — it connects to Firestore directly, and its lists are **live**:
-they update by themselves within a second of the simulator writing. You describe the same collections
-and fields in FlutterFlow's Firestore panel. Types map as: string → **String**, number → **Double**,
-boolean → **Boolean**, timestamp → **DateTime**, array of numbers → **List < Double >**.
+FlutterFlow uses the **same REST calls** as Bubble (section 4.2), set up under **API Calls**. Two
+differences:
+- Turn off **Use Proxy for Test** and **Use Proxy for Run/Test Mode** on every call (Advanced
+  Settings). FlutterFlow's proxy can't reach Firestore and returns 404.
+- FlutterFlow picks values out with **JSON paths**, e.g. `$.documents` (the panel list) or
+  `$.fields.code.stringValue` (one panel's code). `$[:]` means "every item" of the `:runQuery` list.
 
-> **Never** use FlutterFlow's buttons to **deploy Firestore rules or indexes**. The project is shared —
-> a deploy from your project replaces the rules for everyone.
+The app refreshes its calls every 30 seconds, so it is not instant: a change shows up within 30
+seconds, like Bubble's dashboard.
 
 ---
 
 ## 6. Sharing one database with the whole class
+- **The switch is shared too.** When anyone disables a panel, every phone in the room hides its
+  readings. Test with one panel, and switch it back on straight after.
 - **Everything is shared.** Everyone reads the same three panels — when one turns **Critical**, every
   app in the room shows it.
 - **Refresh sensibly in Bubble:** every 60 seconds at most on the dashboard, a **Refresh** button

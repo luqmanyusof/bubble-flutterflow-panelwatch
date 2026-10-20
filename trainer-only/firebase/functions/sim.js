@@ -42,6 +42,7 @@ function newDevice(template) {
     code: template.code,
     name: template.name,
     location: template.location,
+    enabled: true, // the Bubble admin's switch; the client app hides a disabled panel's readings
     ...DEFAULT_LIMITS,
     latest_temperature: 0,
     latest_humidity: 0,

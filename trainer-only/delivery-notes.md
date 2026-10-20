@@ -21,10 +21,11 @@
 |---|---|
 | **Bubble Agent binds API Connector data** (a repeating group of `Firestore - List devices`'s documents) | Participants bind by hand from the checklists in Topics 6–7; the Agent still lays out the pages |
 | **Bubble handles the `:runQuery` response** (a top-level list) — `Readings` initializes with `document` fields | Check the test value is `PNL-01` (an empty one finds nothing); if Bubble rejects the list, tick *Manually enter API response* and paste a sample from the browser |
-| **Which free chart plugin** works with API data in Bubble — pick one and name it in class (Topic 7.2) | Show the readings table only; the chart moves to "extra" |
-| **Test Pilot on FlutterFlow Basic** | Use Prompt 20 (empty, loading and error states) — already in the notes as the fallback |
-| **FlutterFlow connects to Firebase** with only `firebase@flutterflow.io` as Editor | Add participants' Google accounts as Viewer |
-| **FlutterFlow's data viewer opens `readings`** under the new rules (Day 2, T3 *Try it*) | Show `readings` from the Firebase console on the projector instead — the rules only allow searches of 50 or fewer |
+| **Bubble AI credits** — a fresh Free account's 500 cover Prompts 2–5 (the dry run had 231 left after them) | Anyone below ~100 builds Topic 7.2 by hand (route B) |
+| **Topic 7.2 by hand** (route B) on a clean page — drag the repeating group, the filter, the one-text row | Fix the steps in `day1.md` 7.2 B; route A (Prompt 5) is checked |
+| **Password protection on the Free plan** (Settings → General, marked "test for free") — does it lock the `version-test` link? | If it does, add it to Day 1 T8.3 as a step (it's the fix for "anyone with the link"); if not, leave T8.4 as it is |
+| **Test Pilot on FlutterFlow Basic** | Use Prompt 14 (empty, loading and error states) — already in the notes as the fallback |
+| **FlutterFlow API calls with the proxy off** (Day 2, T4) work in Test mode *and* in the installed APK / web app | If the APK fails, turn **Use Proxy for Run/Test Mode** back on for Test mode only and retest |
 | **Generate with Designer** menu names in the current FlutterFlow version | Update the menu paths in `day2.md` |
 | **Web publish** works and the app opens on an iPhone from the home screen | iPhone users run the app in Safari without adding it to the home screen, or in the laptop browser |
 | **APK download** on Basic, and it installs in MuMu by drag-and-drop | Use the web app in the laptop browser |
@@ -44,29 +45,41 @@
 | 14:00 | Dashboard with the Agent (T6) |
 | 15:00 | Device page (T7) — send a demo event (below) so the room sees a status change |
 | 15:45 | Break |
-| 16:00 | Extras or catch-up (*Extra, if you finish early* in `day1.md`) |
-| 16:45 | Wrap-up; everyone closes their Bubble Preview tabs (the 60 s timer keeps reading); set `enabled: false` |
+| 16:00 | Enable / Disable (T7.3) |
+| 16:20 | Publish (T8) — the development link on phones, swap with a neighbour; then extras or catch-up |
+| 16:45 | Wrap-up; everyone closes their Bubble Preview tabs (the 60 s timer keeps reading); all three panels enabled; `config/simulator` → `enabled: false` |
 
 ### Day 2 — FlutterFlow
 | Time | Topic |
 |---|---|
-| 08:45 | (You) `config/simulator` → `enabled: true`, new `stop_at` |
-| 09:00 | FlutterFlow basics, practice app (T1) |
-| 10:15 | Run on every device (T2) — APK builds take minutes; start them before the break |
-| 10:30 | Break |
-| 10:45 | Connect Firebase, describe the collections (T3) |
-| 11:15 | Design with AI: three pages (T4) |
-| 12:00 | Components with AI (T5) |
+| 08:45 | (You) `config/simulator` → `enabled: true`, new `stop_at`; check all three panels are enabled |
+| 09:00 | UI tour (T1) — on the projector: the five areas, the left rail, Test |
+| 09:30 | Malaysia Weather practice app (T2) — theme, one city page, duplicate twice, the menu |
+| 10:30 | Break — start the APK build (T3.1) before it; it takes minutes |
+| 10:45 | Run on every device (T3), then the three API calls (T4) — the proxy switches are the usual stumbling block |
+| 11:15 | Design with AI: three pages (T5) |
+| 12:00 | Components with AI (T6) |
 | 13:00 | Lunch |
-| 14:00 | Live panel list (T6), detail page (T7) |
-| 15:00 | Tests with AI (T8) |
+| 14:00 | Panel list (T7), detail page (T8) |
+| 15:00 | Tests with AI (T9) |
 | 15:30 | Break |
-| 15:45 | Proper app (T9) |
-| 16:15 | Capstone demos (T10) — you send the event each demo needs |
-| 17:00 | Close; set `enabled: false` |
+| 15:45 | Proper app (T10) |
+| 16:15 | Capstone demos (T11) — you send the event each demo needs |
+| 17:00 | Close; `config/simulator` → `enabled: false` |
+
+## The Enable / Disable switch (shared)
+Two different fields are both called `enabled`:
+- `config/simulator` → `enabled`: **your** switch — the simulator on or off.
+- `devices/PNL-0x` → `enabled`: the **admin's** switch — Bubble's *Disable panel* writes it, and the
+  FlutterFlow app hides that panel's readings when it's `false`. Readings keep coming either way.
+
+Any participant can disable any panel, and it disappears from every phone in the room. Before T7.3,
+agree on **PNL-03** for testing, and remind them to switch it back on. A panel left disabled: press
+**Enable panel** in any Bubble admin, or in the console set `devices/PNL-0x` → `enabled` (boolean) →
+`true`. The console saves a boolean correctly, so this one is safe to edit by hand.
 
 ## Making the panels change (you, from the Firebase console)
-Participants' apps only read, so status changes come from two places:
+Participants can't change a panel's status, so status changes come from two places:
 - **Random events:** with `event_chance` `0.05`, about one every 3 minutes across the three panels.
   Set `0` for a calm room and send events yourself.
 - **A demo event:** Firestore → **Data** → `commands` → **Add document** (Auto-ID) with
@@ -85,6 +98,8 @@ Participants' apps only read, so status changes come from two places:
 | No new readings | Simulator off or past `stop_at` | Console → `config/simulator` → `enabled: true`, later `stop_at` |
 | `FAILED_PRECONDITION … requires an index` on a correct call | Index still building, or someone changed the sort field | Firestore → Indexes; compare the body with `firebase-api.md` |
 | `PERMISSION_DENIED` on one call | A search without `limit`, or over 50 | Compare the body with `firebase-api.md` 4.2 |
+| `Set enabled` → `PERMISSION_DENIED` | `<enabled>` in quotes (text, not true/false), `updateMask` missing from the URL, or the yes/no not formatted as `true`/`false` | Compare with `day1.md` 7.3 |
+| A panel shows *Disabled by the admin* on every phone | Someone disabled it and left it | Any Bubble admin → that panel → **Enable panel**, or console → `devices/PNL-0x` → `enabled` `true` |
 | A panel lost its name / limits, or a limit shows blank in Bubble | Edited in the Firebase console | Delete `devices/PNL-0x` — the simulator recreates it with defaults within a minute |
 | `PERMISSION_DENIED` for everyone | Rules date has passed | Edit the date, `firebase deploy --only firestore:rules --project <PROJECT_ID>` |
 | Someone's FlutterFlow project deployed rules | They pressed Deploy in FlutterFlow | Redeploy: `firebase deploy --only firestore --project <PROJECT_ID>` |
@@ -94,5 +109,5 @@ Participants' apps only read, so status changes come from two places:
 | APK won't install | Phone blocks unknown apps | Use MuMu or the web app |
 
 ## After the course
-- `enabled: false`; delete or keep the project (`firebase-setup.md` section 7).
+- `config/simulator` → `enabled: false`; delete or keep the project (`firebase-setup.md` section 7).
 - Remind participants that FlutterFlow Basic renews monthly — cancel if they don't need it.

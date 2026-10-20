@@ -71,7 +71,9 @@ async function loadConfig() {
   return { enabled: c.enabled === true, interval, eventChance, stopAt };
 }
 
-// Read the three devices (creating any that are missing); return them by code
+// Read the three devices (creating any that are missing); return them by code.
+// `enabled` belongs to the admin: it's only set here when a device has none yet. Readings keep
+// coming while a panel is disabled - only the client app hides them.
 async function loadDevices() {
   const byCode = new Map();
   const batch = newBatch();
@@ -80,7 +82,13 @@ async function loadDevices() {
     const ref = db.collection('devices').doc(template.code);
     const snap = await ref.get();
     if (snap.exists) {
-      byCode.set(template.code, { ref, data: snap.data() });
+      const data = snap.data();
+      if (typeof data.enabled !== 'boolean') {
+        batch.update(ref, { enabled: true });
+        data.enabled = true;
+        created++;
+      }
+      byCode.set(template.code, { ref, data });
     } else {
       const data = sim.newDevice(template);
       batch.set(ref, data);
@@ -90,7 +98,7 @@ async function loadDevices() {
   }
   if (created > 0) {
     await batch.commit();
-    logger.info(`Created ${created} device(s).`);
+    logger.info(`Created or completed ${created} device(s).`);
   }
   return byCode;
 }

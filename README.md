@@ -7,7 +7,7 @@
 | **Length** | 2 days |
 | **Level** | Beginners to no-code; no programming needed |
 | **Language** | English |
-| **You build** | A **Bubble admin web app** (desktop and phone) and a **FlutterFlow mobile app** (Android, iPhone, emulator), both on one live **Firebase** database |
+| **You build** | A **Bubble admin web app** (desktop and phone) and a **FlutterFlow mobile app** (Android, iPhone, emulator), both reading one **Firebase** database over its REST API |
 
 ## What PanelWatch is
 
@@ -20,7 +20,8 @@
                  |  (Firestore)  |
                  +---------------+
                    ^           ^
-   REST API (read) |           |   built-in connection (live)
+   REST API (read, |           |   REST API (read,
+     + enable)     |           |   every 30 s)
                    |           |
         +----------------+   +--------------------+
         |  Bubble admin  |   | FlutterFlow mobile |
@@ -28,7 +29,9 @@
         |  engineers:    |   | supervisors:       |
         |  dashboard,    |   | live panels,       |
         |  panel page,   |   | panel page,        |
-        |  readings      |   | chart              |
+        |  readings      |   | chart,             |
+        |  history,      |   |                    |
+        |  on/off switch |   | disabled = hidden  |
         +----------------+   +--------------------+
 ```
 
@@ -42,8 +45,8 @@ are explained in `firebase-api.md`. Everyone in the class shares the same three 
 
 | Day | Morning (by hand) | Afternoon (AI-led) |
 |---|---|---|
-| **1 — Bubble** | Bubble building blocks; the API Connector with a weather API; PanelWatch's data and API | Admin app laid out by **Bubble AI**, pages built with the **Agent**, one feature at a time: dashboard, device page (summary, readings, chart) |
-| **2 — FlutterFlow** | FlutterFlow building blocks with a weather API; running an app on Android, in an emulator and on iPhone | Mobile app with **FlutterFlow AI** designing every screen and component and testing it with **Test Pilot**; live data and chart; capstone demo |
+| **1 — Bubble** | Bubble building blocks; the API Connector with a weather API; PanelWatch's data and API | Admin app laid out by **Bubble AI**, pages built with the **Agent**, one feature at a time: dashboard, device page (summary, readings history); an Enable / Disable switch by hand; publishing on the Free plan |
+| **2 — FlutterFlow** | FlutterFlow building blocks with a weather API; running an app on Android, in an emulator and on iPhone | Mobile app with **FlutterFlow AI** designing every screen and component and testing it with **Test Pilot**; live data and chart; disabled panels hidden; capstone demo |
 
 ## What you need
 
@@ -69,8 +72,9 @@ Gemini, Copilot, or FlutterFlow's AI Agent Panel (it runs on outside AI accounts
 | `trainer-only/` | Trainer files: Firebase setup, the simulator's code, delivery notes. Not needed by participants |
 
 ## Ground rules for a shared database
-- Everyone **reads** the same three panels; your apps never write to the database. When a panel
+- Everyone **reads** the same three panels. The only write is the Bubble admin's **Enable / Disable**
+  switch — and it's shared: disable a panel and every phone in the room hides it, so switch it back
+  on after testing. When a panel
   turns Critical, every app in the room shows it.
 - The data is **simulated** and there's no sign-in — anyone with the project ID can read it, within
   the rules in `firebase-api.md` 4.4. Never put real names, phone numbers or company data in it.
-- Never deploy Firestore rules or indexes from FlutterFlow.

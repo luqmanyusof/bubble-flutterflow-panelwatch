@@ -30,7 +30,7 @@ npm install -g firebase-tools
 firebase login
 cd trainer-only/firebase/functions
 npm install
-npm test                      # 13 tests must pass
+npm test                      # 15 tests must pass
 cd ..
 firebase deploy --only firestore,functions --project <PROJECT_ID>
 ```
@@ -45,7 +45,7 @@ firebase deploy --only firestore,functions --project <PROJECT_ID>
 
 | File | What it does |
 |---|---|
-| `firestore.rules` | Participants' apps only read `devices` and `readings`. The rules cap searches at 50 documents, refuse deletes and other collections, and keep `config` read-only. They also still allow the simulator-era writes (limits, `commands`, `alerts` updates) — unused in class, harmless. The project ID is in the public notes, so these are what stop abuse |
+| `firestore.rules` | Participants' apps read `devices` and `readings`, and the Bubble admin may change one field: a panel's `enabled`, to `true` or `false` (only with `updateMask`, so a panel can't be wiped). The rules cap searches at 50 documents, refuse deletes and other collections, and keep `config` read-only. They also still allow two simulator-era writes (`commands`, `alerts` updates) — unused in class, harmless. Limits can only be changed in the console. The project ID is in the public notes, so these are what stop abuse |
 | `firestore.indexes.json` | Two indexes: `readings` (device_code ↑, time ↓) — the one the course uses — and `alerts` (resolved ↑, time ↓), kept for the simulator's data. Indexes take a few minutes to build — **Firestore → Indexes** shows *Enabled* when done |
 | `functions/` | `simulateReadings` — runs every minute, writes one reading per panel every `interval_seconds` |
 
@@ -59,7 +59,8 @@ firebase deploy --only firestore,functions --project <PROJECT_ID>
 | `event_chance` | number | `0.05` (chance of a random event per panel per reading; `0` = only the events you send — `delivery-notes.md`) |
 | `stop_at` | timestamp | the end of the class day, e.g. 18 Oct 2026 18:00 (UTC+8) |
 
-Within a minute the function creates `devices/PNL-01..03` and starts writing `readings`. Check:
+Within a minute the function creates `devices/PNL-01..03` (each with its own `enabled: true` — the
+admin's switch, not this one) and starts writing `readings`. Check:
 - **Firestore → Data:** `readings` grows by 3 every 30 seconds.
 - **Functions → simulateReadings → Logs:** `Tick 1/2: 3 devices, 0 command(s).`
 - Browser: `https://firestore.googleapis.com/v1/projects/<PROJECT_ID>/databases/(default)/documents/devices`
@@ -114,4 +115,4 @@ cd trainer-only/firebase/functions && npm install && npm test
 ```
 `sim.test.js` checks the rules (power, limits, status, events, summary); `tick.test.js` runs a whole
 tick against an in-memory stand-in for Firestore (devices created, test events applied once, changed
-limits used).
+limits used, a panel's `enabled` added once and never overwritten).
