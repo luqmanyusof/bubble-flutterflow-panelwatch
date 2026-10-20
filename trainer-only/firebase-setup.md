@@ -45,8 +45,8 @@ firebase deploy --only firestore,functions --project <PROJECT_ID>
 
 | File | What it does |
 |---|---|
-| `firestore.rules` | Allows only the course's actions (table in `firebase-api.md` 4.4): limits, resolve, test events, searches of 50 or fewer. No deletes, no other collections, `config` read-only. The project ID is in the public notes, so these are what stop abuse |
-| `firestore.indexes.json` | Two indexes: `readings` (device_code ↑, time ↓) and `alerts` (resolved ↑, time ↓). Indexes take a few minutes to build — **Firestore → Indexes** shows *Enabled* when done |
+| `firestore.rules` | Participants' apps only read `devices` and `readings`. The rules cap searches at 50 documents, refuse deletes and other collections, and keep `config` read-only. They also still allow the simulator-era writes (limits, `commands`, `alerts` updates) — unused in class, harmless. The project ID is in the public notes, so these are what stop abuse |
+| `firestore.indexes.json` | Two indexes: `readings` (device_code ↑, time ↓) — the one the course uses — and `alerts` (resolved ↑, time ↓), kept for the simulator's data. Indexes take a few minutes to build — **Firestore → Indexes** shows *Enabled* when done |
 | `functions/` | `simulateReadings` — runs every minute, writes one reading per panel every `interval_seconds` |
 
 ## 4. Switch the simulator on
@@ -56,7 +56,7 @@ firebase deploy --only firestore,functions --project <PROJECT_ID>
 |---|---|---|
 | `enabled` | boolean | `true` |
 | `interval_seconds` | number | `30` (10–60; `60` halves the cost again — see section 6) |
-| `event_chance` | number | `0.05` (chance of a random event per panel per reading; `0` = only test events) |
+| `event_chance` | number | `0.05` (chance of a random event per panel per reading; `0` = only the events you send — `delivery-notes.md`) |
 | `stop_at` | timestamp | the end of the class day, e.g. 18 Oct 2026 18:00 (UTC+8) |
 
 Within a minute the function creates `devices/PNL-01..03` and starts writing `readings`. Check:

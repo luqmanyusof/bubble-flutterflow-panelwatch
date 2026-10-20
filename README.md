@@ -16,19 +16,19 @@
                          |
                          v
                  +---------------+
-                 |   Firebase    |   readings, alerts, limits, test events
+                 |   Firebase    |   panels and their readings
                  |  (Firestore)  |
                  +---------------+
                    ^           ^
-       REST API    |           |   built-in connection (live)
+   REST API (read) |           |   built-in connection (live)
                    |           |
         +----------------+   +--------------------+
         |  Bubble admin  |   | FlutterFlow mobile |
         |  (Day 1)       |   | (Day 2)            |
         |  engineers:    |   | supervisors:       |
         |  dashboard,    |   | live panels,       |
-        |  limits, tests,|   | chart, acknowledge |
-        |  resolve       |   | alerts             |
+        |  panel page,   |   | panel page,        |
+        |  readings      |   | chart              |
         +----------------+   +--------------------+
 ```
 
@@ -42,8 +42,8 @@ are explained in `firebase-api.md`. Everyone in the class shares the same three 
 
 | Day | Morning (by hand) | Afternoon (AI-led) |
 |---|---|---|
-| **1 — Bubble** | Bubble building blocks; the API Connector with a weather API; PanelWatch's data and API | Admin app laid out by **Bubble AI**, pages built with the **Agent**: dashboard, device page (readings, chart, summary, limits, test events), alerts |
-| **2 — FlutterFlow** | FlutterFlow building blocks with a weather API; running an app on Android, in an emulator and on iPhone | Mobile app with **FlutterFlow AI** designing every screen and component and testing it with **Test Pilot**; live data, chart, acknowledge alerts; capstone demo |
+| **1 — Bubble** | Bubble building blocks; the API Connector with a weather API; PanelWatch's data and API | Admin app laid out by **Bubble AI**, pages built with the **Agent**, one feature at a time: dashboard, device page (summary, readings, chart) |
+| **2 — FlutterFlow** | FlutterFlow building blocks with a weather API; running an app on Android, in an emulator and on iPhone | Mobile app with **FlutterFlow AI** designing every screen and component and testing it with **Test Pilot**; live data and chart; capstone demo |
 
 ## What you need
 
@@ -69,8 +69,8 @@ Gemini, Copilot, or FlutterFlow's AI Agent Panel (it runs on outside AI accounts
 | `trainer-only/` | Trainer files: Firebase setup, the simulator's code, delivery notes. Not needed by participants |
 
 ## Ground rules for a shared database
-- Everything you change, **everyone sees**. Resolve or acknowledge alerts you've seen; change limits
-  only in the guided exercise.
-- The data is **simulated** and there's no sign-in — anyone with the project ID can use it, within
+- Everyone **reads** the same three panels; your apps never write to the database. When a panel
+  turns Critical, every app in the room shows it.
+- The data is **simulated** and there's no sign-in — anyone with the project ID can read it, within
   the rules in `firebase-api.md` 4.4. Never put real names, phone numbers or company data in it.
 - Never deploy Firestore rules or indexes from FlutterFlow.

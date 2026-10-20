@@ -6,11 +6,11 @@
 
 **Use case for the whole course:** **PanelWatch** monitors three electrical panels — `PNL-01`,
 `PNL-02` and `PNL-03`. Every 30 seconds a simulator inside **Firebase** writes five readings for each
-panel — `temperature`, `humidity`, `voltage`, `current` and `vibration` — and works out power, status,
-alerts and a health summary. The whole class shares the same data.
+panel — `temperature`, `humidity`, `voltage`, `current` and `vibration` — and works out power, status
+and a health summary. The whole class shares the same data.
 
-Today you build the **admin system** in **Bubble.io**: a dashboard of the panels, a page per panel
-with its readings, chart and limits, and an alerts page. It works on a desktop and on a phone browser.
+Today you build the **admin system** in **Bubble.io**: a dashboard of the panels and a page per panel
+with its summary, readings and chart. It works on a desktop and on a phone browser.
 Tomorrow you build the supervisors' **mobile app** in FlutterFlow on the same data.
 
 ## Before you start
@@ -32,9 +32,9 @@ Tomorrow you build the supervisors' **mobile app** in FlutterFlow on the same da
                          Firebase (run by the trainer)
    ┌─────────────────────────────────────────────────────────────────────┐
    │  Simulator (Cloud Function)  ──writes every 30 s──►  Firestore database │
-   │  3 panels, rules, alerts                     devices · readings · alerts │
+   │  3 panels, rules, status                          devices · readings │
    └─────────────────────────────────────────────────────────────────────┘
-            ▲ REST API (reads & writes)                ▲ built-in connection (live)
+            ▲ REST API (reads)                         ▲ built-in connection (live)
    Bubble admin system (today)                FlutterFlow mobile app (Day 2)
    desktop + phone browser                    Android APK · emulator · iPhone web app
 ```
@@ -43,9 +43,9 @@ An **IoT** (Internet of Things) system has four layers:
 
 | Layer | In a real factory | In PanelWatch |
 |---|---|---|
-| **Device** | A sensor board (e.g. ESP32 + SHT31 + PZEM-004T) that also applies simple rules | The **simulator** in Firebase — 3 panels; it calculates power, status, alerts and a summary |
+| **Device** | A sensor board (e.g. ESP32 + SHT31 + PZEM-004T) that also applies simple rules | The **simulator** in Firebase — 3 panels; it calculates power, status and a summary |
 | **Data** | A cloud database and its API | **Firebase Firestore** — see `firebase-api.md` |
-| **Admin** | Web pages for engineers: devices, limits, alerts | **Bubble.io** — today |
+| **Admin** | Web pages for engineers: devices and their readings | **Bubble.io** — today |
 | **Supervisor app** | A phone app on the factory floor | **FlutterFlow** — Day 2 |
 
 **Why these tools?**
@@ -57,8 +57,8 @@ An **IoT** (Internet of Things) system has four layers:
 | Built-in AI (the only AI we use) | AI app generator + **Bubble Agent** (500 credits a month on Free) | **Generate with Designer** — screens and components from a prompt |
 
 An **API** (Application Programming Interface) is a door another program can use. A **REST API** uses
-web addresses and the HTTP (Hypertext Transfer Protocol) methods **GET** (read), **POST** (send) and
-**PATCH** (change part of something).
+web addresses and the HTTP (Hypertext Transfer Protocol) methods **GET** (read) and **POST** (send
+something — in PanelWatch, a search).
 
 **Checkpoint ✅** Say where a reading of `temperature = 62` goes, and which two apps show it.
 
@@ -90,7 +90,9 @@ You build in the **Development** version (at `…/version-test`). That's all we 
 ### 2.2 — A data type
 **Data → Data types → New type** `Task`, with fields `title` (text) and `done` (yes/no). On `done`, set
 **Default value** to **no** — without it, new tasks have an empty `done`.
-Bubble adds `Created Date`, `Modified Date`, `Created By` and a unique ID itself.
+Bubble adds the built-in fields `Creator`, `Modified Date`, `Created Date` and `Slug` itself.
+
+![The Task data type](images/day1/2-2-data-type.png)
 
 ### 2.3 — A page, an input and a workflow
 1. **Design →** on `index`, drag in an **Input** (name it `Input Title`) and a **Button** **Add**.
@@ -101,16 +103,29 @@ Bubble adds `Created Date`, `Modified Date`, `Created By` and a unique ID itself
 4. Click the event *When Button Add is clicked* → **Only when** `Input Title's value is not empty` — no
    blank tasks.
 
+> **One workflow, two steps.** Add step 2 with the **+** under step 1. Pressing **Add workflow** again
+> makes a *second* workflow on the same button — both run on every click.
+
+![The Add button's workflow (here the input is named tbx_title and the button btn_add)](images/day1/2-3-add-workflow.png)
+
 ### 2.4 — A repeating group (a list)
-1. Drag in a **Repeating group**: Type of content **Task**, Data source `Do a search for Tasks`,
+1. Drag in a **Repeating group**: Type of content **Task**, Data source **Do a search for → Task** (it
+   then reads *Search for Tasks*),
    **Container layout** **Row** (so each cell's items sit side by side).
 2. In the first cell, a **Checkbox** and, to its right, a **Text** showing `Current cell's Task's title`.
-3. Checkbox workflow: *When* it changes → **Make changes to a thing** → `Current cell's Task`,
-   `done = This Checkbox is checked`.
+3. Select the Checkbox → **Interaction** → **Add workflow** (*Checkbox … is clicked*) → **Data (Things)
+   → Make changes to a thing** → Thing to change `Current cell's Task` → **Fields**: `done = This
+   Checkbox is checked`.
+
+![The repeating group of Tasks](images/day1/2-4-repeating-group.png)
+
+![The checkbox workflow](images/day1/2-4-checkbox-workflow.png)
 
 ### 2.5 — A conditional
-Select the cell's Text → **Conditional** tab → *When* `Current cell's Task's done is yes` → **Font
-color** grey.
+Select the cell's Text → **Conditional** tab → **+** → **When** `Current cell's Task's done is yes` →
+**Change another property** → **Font color** grey.
+
+![The grey conditional](images/day1/2-5-conditional.png)
 
 ### 2.6 — Responsive layout (desktop *and* phone)
 - A **Group** set to **Column** stacks children vertically; **Row** puts them side by side.
@@ -134,9 +149,10 @@ step 2.3's condition or reset is missing; delete them there.
 **Goal:** make Bubble read data from another system — exactly how PanelWatch will read Firebase.
 
 1. Open **API Connector** — the **{ }** icon in the left sidebar.
-2. **The collection** (one per API): click **+ New** if the list is empty, then the **▸** before
-   **COLLECTION: …** at the top → name `Weather`, Authentication **None or self-handled**.
-3. **The call** — its draft *API Call*, top to bottom: click the name next to **API Call:** → `Current`;
+2. **The collection** (one per API): **+ New** creates one with a draft call inside. Rename it with
+   the **⋯** next to it → **Rename** → `Weather`. The **▸** before **COLLECTION: …** at the top shows
+   **Authentication** — leave it **None or self-handled**.
+3. **The call** — use that draft *API Call* (don't add a second one), top to bottom: click the name next to **API Call:** → `Current`;
    **Method** *GET*; paste the URL into the box next to it; **RESPONSE → Use as** *Data*, **Data type**
    *JSON*.
 
@@ -146,11 +162,15 @@ https://api.open-meteo.com/v1/forecast?latitude=3.14&longitude=101.69&current=te
 
 4. Click **Initialize** (at the bottom). Bubble shows the response fields — `current temperature_2m`,
    `current relative_humidity_2m`. Click **Save**.
+
+   ![The weather call, initialized](images/day1/3-weather-call.png)
 5. A page of its own: **Design** → the page dropdown (top left, showing `index`) → **Add a new page**
    → name `weather`, **Clone from** blank → **Create**.
 6. On `weather`, add a **Group**. Its **Visual** tab → **Type of content** `Weather - Current`, **Data
    source** **Get data from an external API → Weather - Current**. Set this first — until the group has
    a type, *Parent group's…* isn't offered inside it.
+
+   ![The weather group's type and data source (this call was named Weather - Current, so the source reads Weather - Weather - Current)](images/day1/3-weather-group.png)
 7. Inside the group, a **Text** → **Visual** tab → click at the end of the text in its content box,
    type `Kuala Lumpur: `, click **Insert dynamic data** → **Parent group's Weather - Current → current
    temperature_2m**, then type ` °C`.
@@ -158,6 +178,8 @@ https://api.open-meteo.com/v1/forecast?latitude=3.14&longitude=101.69&current=te
 **Try it**
 1. **Preview** the `weather` page (`…/version-test/weather`) — the live Kuala Lumpur temperature
    appears.
+
+   ![The weather page in Preview](images/day1/3-weather-preview.png)
 2. **Break it on purpose:** change `latitude=3.14` to `latitude=abc` and click **Initialize** —
    the API answers with an error (*400 Bad Request*). Bad input is rejected by the other system. Put it
    back.
@@ -176,8 +198,8 @@ https://api.open-meteo.com/v1/forecast?latitude=3.14&longitude=101.69&current=te
 
 **Goal:** know what's in the Firebase database before connecting to it.
 
-1. Read **`firebase-api.md`** sections 1–3: the three panels, the collections (`devices`, `readings`,
-   `alerts`, `commands`), every field, and the rules.
+1. Read **`firebase-api.md`** sections 1–3: the three panels, the two collections you use (`devices`
+   and `readings`), every field, and the rules.
 2. The trainer shows the **Firebase console** on the projector — documents appearing every 30 seconds.
 3. Open the list of panels in your browser — a plain **GET**:
 
@@ -186,6 +208,8 @@ https://firestore.googleapis.com/v1/projects/panelwatch-class/databases/(default
 ```
 
 4. Reload after 30 seconds — the `latest_…` values have changed.
+
+![The devices list in the browser](images/day1/4-devices-json.png)
 
 Notice how every value is wrapped with its type — `"stringValue"`, `"doubleValue"`,
 `"booleanValue"`, `"timestampValue"`. Bubble shows those names in its expressions.
@@ -214,17 +238,23 @@ the bridge everything else is built on.
 
 ### 5.1 — The base layout with Bubble AI
 1. Bubble dashboard → **Create new project** → **Web app** → **Create with AI** → **Get started**.
+
+   ![Create a new project](images/day1/5-1-create-project.png)
 2. On **What will you build?**, paste **Prompt 1** (below) into *Describe your app idea* → **Enter**.
    Ignore the suggestion chips. If asked for a name, `panelwatch-admin-<yourname>`.
+
+   ![What will you build?](images/day1/5-1-what-will-you-build.png)
    *(Generating an app uses no AI credits.)*
-3. Bubble AI shows a **Plan** first — **Features** and **Scenarios**. Check both: three pages, nothing
+3. Bubble AI shows a **Plan** first — **Features** and **Scenarios**. Check both: two pages, nothing
    else — no log-in, sign-up, payments, charts or data. Remove anything extra by typing in *Refine
    your app idea*. You don't need to answer its "refine anything?" question.
+
+   ![The Plan for the base layout](images/day1/5-1-plan.png)
 4. Click **Generate** (top right). It takes **10–15 minutes** — read 5.3 while you wait. The top bar
-   comes out as a **reusable element**, so styling it once changes all three pages.
+   comes out as a **reusable element**, so styling it once changes both pages.
 
 **Where each prompt goes:** Prompt 1 on this planning screen only. After generation the editor opens:
-Prompts 2–8 go in the **Agent** tab of the right-hand pane (next to *Properties*), **one at a time** —
+Prompts 2–5 go in the **Agent** tab of the right-hand pane (next to *Properties*), **one at a time** —
 paste, wait until the Agent says it's done, check, do the by-hand steps, then the next prompt.
 
 **Prompt 1 — Base layout** (Bubble AI app generator)
@@ -232,11 +262,10 @@ paste, wait until the Agent says it's done, check, do the by-hand steps, then th
 Build the base layout of an admin web app called "PanelWatch Admin" for engineers who monitor three
 electrical panels in a factory (PNL-01, PNL-02, PNL-03). It must work on a desktop and on a phone.
 
-Three pages. Each has the same top bar - the app name on the left, and links "Dashboard" (to index)
-and "Alerts" (to alerts) on the right - and below it an empty main area with only a page title:
+Two pages. Each has the same top bar - the app name on the left and a "Dashboard" link (to index)
+on the right - and below it an empty main area with only a page title:
 1. "index" - title "Panel overview"
 2. "device" - title "Panel details"
-3. "alerts" - title "Open alerts"
 
 Layout only. Do not create workflows, custom states, popups, recurring events, data types or sample
 data, and no log-in or sign-up pages. I will add the style, the content, the data and the logic
@@ -249,8 +278,8 @@ time**. This prompt is only the first stage.
 |---|---|
 | *"an admin web app … for engineers who monitor three electrical panels in a factory"* | Says **who** uses it and **what for**, so the AI's wording fits an engineers' tool — even for a bare layout |
 | *"It must work on a desktop and on a phone"* | Without this, generators often build a fixed desktop page. Fixing that later is harder than asking now |
-| *"the same top bar … links "Dashboard" (to index) and "Alerts" (to alerts)"* | One navigation on every page. A link only needs its destination page — no workflow |
-| *"index" / "device" / "alerts"* | **Exact page names**, because every later prompt uses them. `index` is Bubble's home page — the dashboard belongs there |
+| *"the same top bar … a "Dashboard" link (to index)"* | One navigation on both pages. A link only needs its destination page — no workflow |
+| *"index" / "device"* | **Exact page names**, because every later prompt uses them. `index` is Bubble's home page — the dashboard belongs there |
 | *"an empty main area with only a page title"* | Everyone in the room gets the **same nearly empty pages**. Each feature is added later by its own prompt, so your app keeps matching the notes |
 | *"Layout only. Do not create workflows, custom states, popups, recurring events"* | Left alone, the generator **guesses the logic** — loading popups, timers, error handlers — differently for every person, and it clashes with the logic you build by hand |
 | *"data types or sample data"* | The AI can't see Firebase. Its own database and fake rows would get mixed up with the real data |
@@ -266,12 +295,14 @@ time**. This prompt is only the first stage.
 ### 5.2 — Style with the Agent
 1. Open the **Agent** (right side of the editor) and paste **Prompt 2**. *(The Agent uses AI credits —
    500 a month on Free; this prompt took about 30. The count is at the bottom of the Agent pane.)*
-2. Check: **Styles** tab → three colour variables `Normal`, `Warning`, `Critical`; every page still has
-   only its top bar and title.
+2. Check: **Styles** tab → three colour variables `Normal`, `Warning`, `Critical`; both pages still have
+   only their top bar and title.
+
+   ![The Agent's style changes](images/day1/5-2-style-result.png)
 
 **Prompt 2 — Style** (Agent)
 ```text
-Apply one style to all three pages: a dark blue top bar with white text, a light grey page
+Apply one style to both pages: a dark blue top bar with white text, a light grey page
 background, and for content, white cards with rounded corners and a light shadow.
 Create three colour variables for statuses: "Normal" green, "Warning" amber, "Critical" red.
 Change styles and colours only - do not add, move or remove elements, and do not add workflows.
@@ -289,35 +320,36 @@ Change styles and colours only - do not add, move or remove elements, and do not
 The Agent must not guess API details, so you set this up yourself.
 1. Open **API Connector** (the **{ }** icon) — each app has its own, so the practice app's calls aren't
    here.
-2. **The collection** (one per API): the left list already has *New Collection*. Click the **▸** before
-   **COLLECTION: New Collection** at the top to open its settings → name `Firestore`, Authentication
-   **None or self-handled**, shared header `Content-Type` = `application/json`.
+2. **The collection** (one per API): the left list already has *New Collection*. Its **⋯** →
+   **Rename** → `Firestore`. The **▸** before **COLLECTION: …** at the top shows **Authentication** —
+   leave it **None or self-handled**. No shared headers are needed.
+
+   ![Rename a collection from its menu](images/day1/5-3-collection-menu.png)
 3. **The calls:** *New Collection* already holds one draft call, *API Call* — it becomes call 1. For
    each further call, click **+** next to `Firestore` in the left list. Then, top to bottom:
    - **API Call:** click the name → type the call name from the table below.
-   - **Method** dropdown (GET, POST, PATCH) and the **URL** box next to it — paste the URL.
+   - **Method** dropdown (GET or POST) and the **URL** box next to it — paste the URL.
    - Leave **Attempt to make the call from the browser** unticked.
-   - POST and PATCH calls: **Body type** *JSON*, then paste the body into **Body**.
-   - **Parameters:** Bubble adds one for each `[code]` in the URL, and one under **Body parameters**
-     for each `<code>` in the body. Type its test **Value** and untick **Private** (the pages set
-     them). **An empty test value initializes the wrong shape** — e.g. `Readings` with no `code` finds
-     nothing and Bubble learns only `readTime`.
-   - **RESPONSE → Use as** *Data* or *Action* (table below), **Data type** *JSON*.
-   - **Initialize** (at the bottom) — Bubble calls the API once and learns the fields.
+   - The POST call (`Readings`): **Body type** *JSON*, then paste the body into **Body**.
+   - **Parameters:** Bubble adds a row under **URL parameters** for each `[code]` in the URL, and under
+     **Body parameters** for each `<code>` in the body — **Key**, **Value**, **Private**, **Allow
+     blank**. Type the test **Value** and **untick Private** (ticked, the page can't set it — every
+     panel page would show the test panel). **An empty test value initializes the wrong shape** — e.g.
+     `Readings` with no `code` finds nothing and Bubble learns only `readTime`.
+   - **RESPONSE → Use as** *Data*, **Data type** *JSON*.
+   - **Initialize** (at the bottom) — Bubble calls the API once and learns the fields. After any change
+     the button turns red: **Re-initialize**.
+
+   ![The collection settings and the Readings call](images/day1/5-3-readings-call.png)
 
 | # | Call name | Use as | Method | URL | Parameters (test values) |
 |---|---|---|---|---|---|
 | 1 | `List devices` | Data | GET | `https://firestore.googleapis.com/v1/projects/panelwatch-class/databases/(default)/documents/devices` | — |
 | 2 | `Get device` | Data | GET | `https://firestore.googleapis.com/v1/projects/panelwatch-class/databases/(default)/documents/devices/[code]` | `code` = `PNL-01` |
 | 3 | `Readings` | Data | POST | `https://firestore.googleapis.com/v1/projects/panelwatch-class/databases/(default)/documents:runQuery` | `code` = `PNL-01` |
-| 4 | `Open alerts` | Data | POST | `https://firestore.googleapis.com/v1/projects/panelwatch-class/databases/(default)/documents:runQuery` | — |
-| 5 | `Resolve alert` | **Action** | PATCH | `https://firestore.googleapis.com/v1/projects/panelwatch-class/databases/(default)/documents/alerts/[id]?updateMask.fieldPaths=resolved&updateMask.fieldPaths=acknowledged_by` | `id`, `name` — initialized in Topic 8 |
-| 6 | `Update limits` | **Action** | PATCH | `https://firestore.googleapis.com/v1/projects/panelwatch-class/databases/(default)/documents/devices/[code]?updateMask.fieldPaths=max_temperature&updateMask.fieldPaths=max_humidity&updateMask.fieldPaths=min_voltage&updateMask.fieldPaths=max_voltage&updateMask.fieldPaths=max_current&updateMask.fieldPaths=max_vibration` | `code` + six limits — initialized in Topic 7.3 |
-| 7 | `Send test event` | **Action** | POST | `https://firestore.googleapis.com/v1/projects/panelwatch-class/databases/(default)/documents/commands` | `code` = `PNL-03`, `event` = `voltage-drop`, `name` = your name |
 
-**Bodies** for the POST and PATCH calls:
 
-**Call 3 — `Readings`** — the last 20 readings of one panel
+**Body** for call 3 — the last 20 readings of one panel:
 ```json
 { "structuredQuery": {
     "from": [ { "collectionId": "readings" } ],
@@ -327,66 +359,26 @@ The Agent must not guess API details, so you set this up yourself.
 } }
 ```
 
-**Call 4 — `Open alerts`** — open alerts, newest first
-```json
-{ "structuredQuery": {
-    "from": [ { "collectionId": "alerts" } ],
-    "where": { "fieldFilter": { "field": { "fieldPath": "resolved" }, "op": "EQUAL", "value": { "booleanValue": false } } },
-    "orderBy": [ { "field": { "fieldPath": "time" }, "direction": "DESCENDING" } ],
-    "limit": 30
-} }
-```
-
-**Call 5 — `Resolve alert`**
-```json
-{ "fields": { "resolved": { "booleanValue": true }, "acknowledged_by": { "stringValue": "<name>" } } }
-```
-
-**Call 6 — `Update limits`** — numbers go **without** quotes
-```json
-{ "fields": {
-  "max_temperature": { "doubleValue": <max_temperature> }, "max_humidity": { "doubleValue": <max_humidity> },
-  "min_voltage": { "doubleValue": <min_voltage> },         "max_voltage": { "doubleValue": <max_voltage> },
-  "max_current": { "doubleValue": <max_current> },         "max_vibration": { "doubleValue": <max_vibration> }
-} }
-```
-
-**Call 7 — `Send test event`**
-```json
-{ "fields": {
-    "device_code":  { "stringValue": "<code>" },
-    "event":        { "stringValue": "<event>" },
-    "done":         { "booleanValue": false },
-    "requested_by": { "stringValue": "<name>" }
-} }
-```
-
-4. **Initialize** calls 1–4 now; leave 5 and 6 until Topics 8 and 7.3, when you have real values.
-5. Initialize call 7, `Send test event`, once — it really sends one, so `PNL-03` turns amber at its
-   next reading.
+4. **Initialize** all three. Each one only **reads** — the apps in this course never write to
+   Firebase.
 
 | Piece | Meaning |
 |---|---|
 | `[code]` in the URL | A parameter inside the address |
 | `<code>` in the body | A parameter inside the JSON body |
 | `:runQuery` | Firestore's search: filter, sort, limit |
-| `updateMask.fieldPaths=…` | "Change only these fields" — see the warning below |
-
-> **Never** send a PATCH to Firebase without `updateMask`. Without it, Firestore **replaces the whole
-> document** with only the fields you sent — resolving one alert would erase its panel, value and time,
-> and the whole class shares that data.
 
 **Try it**
 1. **Initialize** `List devices` → three documents, each with `fields code stringValue`,
    `fields status stringValue`, …
-2. **Initialize** `Open alerts`. If there are none, you get **one result with only `readTime`** —
-   Firestore's way of saying "nothing found". You'll filter it out in Topic 8.
+2. **Break it on purpose:** in `Readings`, set the test value of `code` to `PNL-99` and initialize →
+   **one result with only `readTime`** — Firestore's way of saying "nothing found". You'll filter it
+   out in Topic 7.2. Put `PNL-01` back.
 3. **Break it on purpose:** in `Readings`, change the sort field `"time"` to `"humidity"` and
    initialize → **`FAILED_PRECONDITION: The query requires an index`**. Sorted searches need an index,
    and the trainer created only the ones PanelWatch uses. Put it back.
 
-**Checkpoint ✅** `List devices`, `Get device`, `Readings` and `Open alerts` return real Firebase
-data, and your test event reached the simulator.
+**Checkpoint ✅** `List devices`, `Get device` and `Readings` return real Firebase data.
 
 ---
 
@@ -429,42 +421,72 @@ Build the elements only - no workflows, custom states, popups or recurring event
 | *"Build the elements only - no workflows …"* | The same last line in every Agent prompt. The Agent builds what you see; you build what it **does**, the same way as everyone else |
 
 1. Paste **Prompt 3** into the **Agent**.
-2. **Check — and fix by hand if needed** (the Agent may not bind external API data correctly):
+2. **Check — and fix by hand if needed** (select each element; its settings open on the right):
 
 | ✔ | Must be there |
 |---|---|
-| ☐ | Repeating group: data source **Get data from an external API → Firestore - List devices**`'s documents` |
-| ☐ | Texts from `Current cell's … fields`: `code stringValue`, `name stringValue`, `latest_temperature doubleValue` °C, humidity %, voltage V, current A, vibration mm/s, power W, `last_reading_text stringValue` |
-| ☐ | Status badge colour by **Conditional**: `… status stringValue is Critical` → red; `is Warning` → amber; else green |
-| ☐ | Layout: a **Row** that **wraps**, cards with **min width 300 / max width 420** — 3 per row at 1440 px, 1 per row at 390 px |
+| ☐ | The repeating group (e.g. *Devices panel grid*) → **Visual** → **Type of content** `List devices documents`, **Data source** `Firestore - List devices's documents` |
+| ☐ | Each text shows a field from the cell, e.g. `Parent group's List devices documents's fields's latest_temperature's doubleValue :formatted as 1,028.6` — the canvas shows placeholders like *1,200*; real values appear only in **Preview** |
+| ☐ | Status badge colour by **Conditional**: `… status stringValue is Critical` → Critical colour; `is Warning` → Warning colour; else Normal |
+| ☐ | Layout: repeating group **Configure → Scroll direction** *wrap* (↩), **Min. column width** `300` — 3 per row at 1440 px, 1 per row at 390 px |
+| ☐ | **Workflow** (left sidebar): no workflows on `index` — the Agent only built elements |
 
-### 6.1 — Keep it fresh
-API data in Bubble doesn't refresh by itself. Make the dashboard fetch again every **60 seconds**:
-1. On the page, add a custom state `tick` (number, default 0).
-2. **Workflow → General → Do every 60 seconds** → **Set state** `tick = page's tick + 1`.
-3. Add a **Refresh** button that does the same **Set state**.
-4. In **API Connector → Firestore → List devices**, **Add header** `X-Refresh` = `<tick>` (untick Private),
-   re-initialize, and on the repeating group's data source set `tick = page's tick`.
+3. **Preview** (▷ top right): three cards with real values.
 
-When `tick` changes, Bubble sees a "new" request and fetches again. Firestore ignores the extra header.
+![The dashboard in Preview](images/day1/6-dashboard-preview.png)
+
+### 6.1 — Keep it fresh (by hand)
+API data in Bubble doesn't refresh by itself — and the **Refresh** button does nothing yet: the Agent
+built it without a workflow. The trick: a page counter `tick`, sent to Firestore as an extra header.
+When `tick` changes, Bubble sees a "new" request and fetches again. Firestore ignores the header.
+
+1. **The counter:** Elements Tree → select **index** → the **Custom States** icon at the top right of
+   its Properties panel (next to **⋯**) → **+ New** → type **number** → name `tick`. Default value is
+   already `0`.
+
+   ![Custom States on the index page](images/day1/6-1-custom-state.png)
+
+2. **The header:** **API Connector** (**{ }**) → `Firestore` → **List devices** → **Add header** → Key
+   `X-Refresh`, Value `0`, untick **Private** → **Re-initialize** (it turns red after any change).
+
+   ![The X-Refresh header](images/day1/6-1-x-refresh-header.png)
+
+3. **Feed it to the grid:** back in Design, select the repeating group → **Visual → Data source** →
+   click `Firestore - List devices` → in the window, **(header) X-Refresh** → **+ Add** (left of the
+   box) → `index` → `'s tick`.
+
+   ![X-Refresh fed from index's tick](images/day1/6-1-grid-x-refresh.png)
+
+4. **The Refresh button:** select it → **Interaction** → **Add workflow** → search `Set state` → **Set
+   state of an element** → Element `index` → **Custom States**: `tick` = `index's tick + 1`.
+
+   ![The Refresh button's Set state action](images/day1/6-1-refresh-set-state.png)
+
+5. **The timer:** **Workflow** (left sidebar) → **+ New** → search `every` → **Do every 5 seconds** →
+   **Interval (seconds)** `60` → **+** under the event → the same **Set state** as step 4.
+
+   ![Do every 60 seconds](images/day1/6-1-timer.png)
+
+> **Building `index's tick + 1`:** click the value → type `index` → pick **index** → **'s tick** → **+**
+> → type `1` → press **Enter**, then click a heading in the panel to close the list. Clicking inside
+> the list instead adds a stray operator (e.g. `+ 1 *`) — click it and choose **(Clear selection)**.
 
 > **Reads cost:** every fetch reads each document it returns, and the whole class shares the project's
 > allowance. Every 60 seconds on the dashboard is plenty for an admin; elsewhere, use a **Refresh**
 > button.
 
 **Try it**
-1. **Responsive** at 1440 and 390 px — the cards rearrange.
-2. Leave **Preview** open: the values change every minute (or press **Refresh**). When an event
-   happens, a card turns amber or red.
+1. **Preview**: note *Last reading*, wait 30 seconds, press **Refresh** — the time and values change.
+2. **Responsive** (top of the editor) at 1440 and 390 px — the cards rearrange.
 
 **Checkpoint ✅** A fresh, responsive dashboard of the three panels.
 
 ---
 
-## Topic 7 — The device page: readings, chart, summary, limits and test events
+## Topic 7 — The device page: summary, readings and chart
 
-**Goal:** click a card → the panel's last 20 readings, a chart, its health summary, its limits, and a
-button that sends a test event. Four features, one prompt each — check each one before the next.
+**Goal:** click a card → the panel's health summary, its last 20 readings and a chart. Two features,
+one prompt each — check the first before the second.
 
 ### 7.1 — The panel and its summary
 
@@ -487,7 +509,7 @@ Build the elements only - no workflows, custom states, popups or recurring event
 | Part of the prompt | Why |
 |---|---|
 | *"the page URL parameter "code" (for example device?code=PNL-01)"* | One page serves all three panels. The example shows the exact address the dashboard will open |
-| *"a group whose type is "Firestore - Get device" … code = Get code from page URL"* | One group fetches the panel **once**; everything inside reads it as *Parent group's…* — the pattern from Topic 3. Prompts 6 and 7 add to this group |
+| *"a group whose type is "Firestore - Get device" … code = Get code from page URL"* | One group fetches the panel **once**; everything inside reads it as *Parent group's…* — the pattern from Topic 3 |
 | *"the summary (stringValue) in a highlighted card"* | The simulator already writes the summary — Bubble only shows it |
 | *"a "Back to dashboard" link"* | A link, not a button — navigation without a workflow |
 
@@ -539,120 +561,15 @@ Build the elements only - no workflows, custom states, popups or recurring event
    names) of `temperature doubleValue` from the same list, `:sorted by … time_unix doubleValue`
    ascending so time runs left to right.
 
-### 7.3 — The limits form
-
-**Prompt 6 — Limits form** (Agent)
-```text
-On the page "device", inside the panel group, below the readings, add a "Limits" section: six
-decimal inputs labelled Max temperature (°C), Max humidity (%), Min voltage (V), Max voltage (V),
-Max current (A) and Max vibration (mm/s), each starting with the group's current value
-(max_temperature doubleValue, max_humidity doubleValue and so on), and a "Save limits" button.
-
-Build the elements only - no workflows, custom states, popups or recurring events.
-```
-**Why it's written this way**
-
-| Part of the prompt | Why |
-|---|---|
-| *"inside the panel group"* | The inputs read the current limits as *Parent group's…* — only possible inside the group from Prompt 4 |
-| *"each starting with the group's current value"* | The form shows today's limits, so **Save** without changes rewrites the same values |
-| *"decimal inputs"* | Only numbers can be typed — the database rules refuse a limit sent as text |
-| No workflow for **Save limits** | Writes to Firebase are the risky part (`updateMask`!). You build this one by hand, below |
-
-1. Paste **Prompt 6** into the **Agent**. Check: six inputs (content format *decimal*), each showing its
-   current limit, and a **Save limits** button.
-2. **API Connector → Firestore → `Update limits`** (call 6 in 5.3) → **Initialize** with the current
-   values (`PNL-01`, 45, 85, 207, 253, 20, 4.5) — this rewrites them unchanged.
-3. **The workflow (by hand):** **Save limits** → **Plugins → Firestore - Update limits** with
-   `code = Get code from page URL` and each input's value.
-
-> **Shared exercise:** every app in the room reads these limits. **Don't change them on your own.** In
-> class, the trainer runs the live change: one person lowers `PNL-02`'s `max_temperature` to `33` on
-> the projector, everyone presses **Refresh** and watches `PNL-02` go to **Warning**, then it's set back
-> to `45`.
-
-### 7.4 — Send a test event
-
-**Prompt 7 — Test event box** (Agent)
-```text
-On the page "device", below the limits, add a "Send test event" section: a dropdown "Event" with the
-choices overheating, voltage-drop, current-spike and high-vibration, an input "Your name", and a
-"Send test event" button.
-
-Build the elements only - no workflows, custom states, popups or recurring events.
-```
-**Why it's written this way**
-
-| Part of the prompt | Why |
-|---|---|
-| *"overheating, voltage-drop, current-spike and high-vibration"* | The only event names the simulator — and the database rules — accept. A dropdown means nobody can mistype one |
-| *"an input "Your name""* | Saved with the event as `requested_by`, so the room can see who sent it |
-
-1. Paste **Prompt 7** into the **Agent**. Check: the dropdown has exactly the four events.
-2. **The workflow (by hand):** **Send test event** → **Plugins → Firestore - Send test event** with
-   `code = Get code from page URL`, `event = Dropdown Event's value`, `name = Input Your name's value`.
-   Disable the button when `Your name` is empty.
-
 **Try it**
-1. Send `overheating` to `PNL-01`. Wait 30 seconds, press **Refresh**: status **Critical**, the latest
-   reading over 60 °C, and the summary says *Shut down the load and inspect now.* — on everyone's
+1. Open `PNL-01` from the dashboard, wait 30 seconds and press **Refresh**: a new row at the top of
+   the table, and the latest values change.
+2. Now and then a panel has a random **event** (or the trainer sends one): its status turns
+   **Warning** or **Critical**, its row turns red and the summary says what to do — on everyone's
    screen.
-2. **Think it through (don't try it):** what would happen if `Update limits` had no `updateMask`?
-   (Answer in `firebase-api.md` 4.4.)
 
-**Checkpoint ✅** The device page shows readings, a chart, the summary and the limits, and a test
-event changes the panel within 30 seconds.
-
----
-
-## Topic 8 — The alerts page
-
-**Goal:** engineers see open alerts and resolve them.
-
-**Prompt 8 — Alerts page** (Agent)
-```text
-On the page "alerts", under the title, build a list of open alerts. Do not use a Bubble data type.
-
-At the top: an input "Your name" and a "Refresh" button.
-
-A repeating group of "Get data from an external API" -> "Firestore - Open alerts", filtered so only
-items whose document name is not empty are shown. Each cell is a card with, from Current cell's
-document fields: device_code (bold), parameter, value and limit ("62.1 / limit 45"), a level badge
-coloured with the Warning or Critical colour, time_text, and a "Resolve" button.
-
-When the filtered list is empty, show the text "No open alerts" with a check in the Normal colour
-instead. Cards stack in one column on a phone and two columns on a desktop.
-
-Build the elements only - no workflows, custom states, popups or recurring events.
-```
-**Why it's written this way**
-
-| Part of the prompt | Why |
-|---|---|
-| *"an input "Your name""* | **Resolve** writes `acknowledged_by` — the name comes from this input |
-| *"only items whose document name is not empty"* | With no open alerts, `:runQuery` returns one empty item — same filter as Prompt 5 |
-| *"("62.1 / limit 45")"* | An example of the finished text is clearer than describing the format |
-| *"coloured with the Warning or Critical colour"* | An alert is only ever one of these two levels — the colour variables from Prompt 2 |
-| *"When the filtered list is empty, show "No open alerts""* | An empty page looks broken. An empty state says "all clear" |
-| *"one column on a phone and two columns on a desktop"* | The responsive result, stated up front, so you can check it |
-
-1. Paste **Prompt 8** into the **Agent**. Check: a repeating group of **Firestore - Open alerts**
-   (filtered), cards coloured by `level stringValue`, a **Resolve** button per alert, and the
-   **Your name** input and **Refresh** button at the top.
-2. The **Resolve** workflow (by hand):
-   - **Plugins → Firestore - Resolve alert** with
-     `id = Current cell's … document name:split by (/):last item`, `name = Input Your name's value`.
-   - Then **Set state** `tick = tick + 1` so the list refreshes at once.
-3. Now **initialize** `Resolve alert` in the API Connector with a real alert ID (copy one from the list).
-
-**Try it**
-1. Resolve one alert — it disappears, for you and for everyone else after their next refresh. Open
-   `…/documents/alerts/<that ID>` in the browser: `resolved` is `true`, `acknowledged_by` is your name.
-2. **Break it on purpose:** pass the *whole* `document name` as `id` (remove `:split by`) → **404 / not
-   found**: the API wants just the ID at the end of the address. Put the split back.
-3. Remove the `:filtered` on an empty list → one blank card. Put it back.
-
-**Checkpoint ✅** Open alerts listed; **Resolve** closes one in Firebase.
+**Checkpoint ✅** The device page shows the summary, the last 20 readings and a chart, for whichever
+panel you open.
 
 ---
 
@@ -660,17 +577,16 @@ Build the elements only - no workflows, custom states, popups or recurring event
 - A practice app `practice-bubble-<yourname>` built by hand: data type, workflow, list, conditional,
   responsive row, and an **API Connector** call to a weather API.
 - `panelwatch-admin-<yourname>`, built in stages — base layout by Bubble AI, style and each feature
-  by the Agent, every workflow by hand — with a **Firestore** API (7 calls) and three pages: a responsive **dashboard**, a **device page** (readings, chart,
-  summary, limits, test events) and an **alerts page** (resolve).
+  by the Agent, every workflow by hand — with a **Firestore** API (3 calls) and two pages: a
+  responsive **dashboard** and a **device page** (summary, readings, chart).
 
 **Security recap**
 - The Firebase project has **no sign-in**: anyone with the project ID can call it. Its rules allow
   only what the course does (`firebase-api.md` 4.4), it holds only simulated data, and we never put
   real names, phone numbers or company data in it.
-- PATCH always has an `updateMask`.
 
 **Extra, if you finish early**
-- Ask the Agent for an **open alerts count** badge on the dashboard.
+- Ask the Agent for a **limits** card on the device page — the six `max_…`/`min_…` values, read-only.
 - Add a **power** chart under the temperature chart.
 
 **Tomorrow (Day 2):** the supervisors' mobile app in FlutterFlow — designed mostly with AI, on the same

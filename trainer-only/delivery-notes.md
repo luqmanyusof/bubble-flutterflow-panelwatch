@@ -19,8 +19,8 @@
 ### Dry run — check these yourself (they decide parts of the notes)
 | Check | If it fails |
 |---|---|
-| **Bubble Agent binds API Connector data** (a repeating group of `Firestore - List devices`'s documents) | Participants bind by hand from the checklists in Topics 6–8; the Agent still lays out the pages |
-| **Bubble handles the `:runQuery` response** (a top-level list) — `Readings` and `Open alerts` initialize with `document` fields | Initialize again after a test event so there's data; if Bubble rejects the list, tick *Manually enter API response* and paste a sample from the browser |
+| **Bubble Agent binds API Connector data** (a repeating group of `Firestore - List devices`'s documents) | Participants bind by hand from the checklists in Topics 6–7; the Agent still lays out the pages |
+| **Bubble handles the `:runQuery` response** (a top-level list) — `Readings` initializes with `document` fields | Check the test value is `PNL-01` (an empty one finds nothing); if Bubble rejects the list, tick *Manually enter API response* and paste a sample from the browser |
 | **Which free chart plugin** works with API data in Bubble — pick one and name it in class (Topic 7.2) | Show the readings table only; the chart moves to "extra" |
 | **Test Pilot on FlutterFlow Basic** | Use Prompt 20 (empty, loading and error states) — already in the notes as the fallback |
 | **FlutterFlow connects to Firebase** with only `firebase@flutterflow.io` as Editor | Add participants' Google accounts as Viewer |
@@ -42,9 +42,9 @@
 | 12:00 | Create the admin app + Firestore calls (T5) — start the generation first (10–15 min), explain the API calls while it runs |
 | 13:00 | Lunch |
 | 14:00 | Dashboard with the Agent (T6) |
-| 15:00 | Device page (T7) — **shared limits exercise** run by you |
+| 15:00 | Device page (T7) — send a demo event (below) so the room sees a status change |
 | 15:45 | Break |
-| 16:00 | Alerts page (T8) |
+| 16:00 | Extras or catch-up (*Extra, if you finish early* in `day1.md`) |
 | 16:45 | Wrap-up; everyone closes their Bubble Preview tabs (the 60 s timer keeps reading); set `enabled: false` |
 
 ### Day 2 — FlutterFlow
@@ -55,40 +55,43 @@
 | 10:15 | Run on every device (T2) — APK builds take minutes; start them before the break |
 | 10:30 | Break |
 | 10:45 | Connect Firebase, describe the collections (T3) |
-| 11:15 | Design with AI: four pages (T4) |
+| 11:15 | Design with AI: three pages (T4) |
 | 12:00 | Components with AI (T5) |
 | 13:00 | Lunch |
 | 14:00 | Live panel list (T6), detail page (T7) |
-| 15:00 | Alerts and acknowledge (T8) |
+| 15:00 | Tests with AI (T8) |
 | 15:30 | Break |
-| 15:45 | Tests with AI (T9), proper app (T10) |
-| 16:15 | Capstone demos (T11) |
+| 15:45 | Proper app (T9) |
+| 16:15 | Capstone demos (T10) — you send the event each demo needs |
 | 17:00 | Close; set `enabled: false` |
 
-## Running the shared exercises
-- **Limits change (Day 1, T7.3):** one volunteer on the projector lowers `PNL-02` `max_temperature` to
-  `33`. Everyone presses **Refresh** — `PNL-02` turns **Warning** and alerts appear. Then set it back to
-  `45` together. Check in the Firebase console that all six limits are back to the defaults:
-  45 / 85 / 207 / 253 / 20 / 4.5.
-- **Test events:** ask the room to send one each, by name, rather than all at once — or nominate a
-  "control room" person per table.
-- **Alerts:** with a shared list, someone always resolves "your" alert first. Say so up front; it's the
-  point of a control room. Send a fresh event if someone needs one to test.
+## Making the panels change (you, from the Firebase console)
+Participants' apps only read, so status changes come from two places:
+- **Random events:** with `event_chance` `0.05`, about one every 3 minutes across the three panels.
+  Set `0` for a calm room and send events yourself.
+- **A demo event:** Firestore → **Data** → `commands` → **Add document** (Auto-ID) with
+  `device_code` (string) `PNL-02`, `event` (string) `overheating`, `done` (boolean) `false`. Within
+  30 seconds `PNL-02` turns **Critical** in every app. Other events: `voltage-drop`, `current-spike`,
+  `high-vibration`. The console ignores the database rules, so this works even though participants
+  can't do it.
+- **Changing a limit** (e.g. `devices/PNL-02` → `max_temperature` → `33` turns it **Warning**): the
+  console saves a whole number as an *integer*, and Bubble reads `doubleValue`, so that limit shows
+  blank in Bubble. Afterwards, **delete `devices/PNL-02`** — the simulator recreates it with the
+  defaults, as doubles, within a minute.
 
 ## When things go wrong
 | Symptom | Likely cause | Fix |
 |---|---|---|
 | No new readings | Simulator off or past `stop_at` | Console → `config/simulator` → `enabled: true`, later `stop_at` |
 | `FAILED_PRECONDITION … requires an index` on a correct call | Index still building, or someone changed the sort field | Firestore → Indexes; compare the body with `firebase-api.md` |
-| `PERMISSION_DENIED` on one call | The call does something the rules don't allow: PATCH without `updateMask`, a limit sent as text, a search without `limit` or over 50, an extra field in a test event | Compare the call with `firebase-api.md` 4.2 and the rules table in 4.4 |
-| A panel lost its name / limits | Someone edited it in the Firebase console (the rules stop the API from doing this) | Delete `devices/PNL-0x` — the simulator recreates it with defaults within a minute |
+| `PERMISSION_DENIED` on one call | A search without `limit`, or over 50 | Compare the body with `firebase-api.md` 4.2 |
+| A panel lost its name / limits, or a limit shows blank in Bubble | Edited in the Firebase console | Delete `devices/PNL-0x` — the simulator recreates it with defaults within a minute |
 | `PERMISSION_DENIED` for everyone | Rules date has passed | Edit the date, `firebase deploy --only firestore:rules --project <PROJECT_ID>` |
 | Someone's FlutterFlow project deployed rules | They pressed Deploy in FlutterFlow | Redeploy: `firebase deploy --only firestore --project <PROJECT_ID>` |
 | `429 / RESOURCE_EXHAUSTED` | Billing not on Blaze (Spark stops at the free allowance) | Check Billing is Blaze; set `interval_seconds` to `60` |
 | Reads climbing fast (Firestore → Usage) | Many open FlutterFlow apps, or Bubble tabs left on the 60 s timer | `interval_seconds` → `60`; ask the room to close Test Mode and old Bubble Preview tabs |
 | Bubble list doesn't change | No `X-Refresh`/`tick` | Topic 6.1 |
 | APK won't install | Phone blocks unknown apps | Use MuMu or the web app |
-| Too many old alerts | Random events over a long day | Set `event_chance` to `0` and use test events; resolve old ones from Bubble |
 
 ## After the course
 - `enabled: false`; delete or keep the project (`firebase-setup.md` section 7).
