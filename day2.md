@@ -4,7 +4,7 @@
 > blocks in a small practice app. Then FlutterFlow's built-in AI designs most of the PanelWatch mobile
 > app — screens, components and tests — and you connect it to the live Firebase data.
 > **Carry-over:** yesterday's Bubble admin (`panelwatch-admin-<yourname>`) — you'll use its **Send test
-> event** and **alerts** pages to drive today's app. The project ID from the trainer.
+> event** and **alerts** pages to drive today's app. The Firebase project ID: `panelwatch-class`.
 
 **Today's app:** supervisors on the factory floor see the three panels' status and latest readings,
 each panel's summary and chart, and the open alerts — **live**, with no refresh button — and
@@ -154,7 +154,7 @@ screen.
 **Goal:** a new project connected to the course's Firebase, with the three collections described.
 
 1. **Create New → Create Blank** → `PanelWatch Mobile`.
-2. **Settings and Integrations → Project Setup → Firebase** → enter the **project ID** from the trainer
+2. **Settings and Integrations → Project Setup → Firebase** → enter the **project ID** `panelwatch-class`
    → **Connect**. If FlutterFlow asks, click **Generate Config Files**. (The trainer has already given
    FlutterFlow access to the project — you don't do anything in Firebase.)
 3. **Firestore** (left navigation) → **+** → **Create Collection** for each collection in
@@ -172,7 +172,7 @@ screen.
 > is shared: a deploy from your project replaces the rules for the whole class.
 
 **Try it** — Firestore → the data viewer / content manager: you see the three `devices` documents, and
-`readings` growing every 15 seconds.
+`readings` growing every 30 seconds.
 
 **Checkpoint ✅** Firebase connected; three collections described with the right field names and types.
 
@@ -184,26 +184,120 @@ screen.
 
 1. **Theme first (by hand, 2 minutes):** **Theme Settings → Colors** → primary dark blue, background
    light grey. Every generated screen then uses the project theme.
-2. **Page Selector → add a page → Generate with Designer (AI)** for each page:
+2. **Page Selector → add a page → Generate with Designer (AI)** for each page, with its prompt below:
 
 | Prompt | Page name | What it is |
 |---|---|---|
-| 5 | `DeviceList` | The three panels — the home page |
-| 6 | `DeviceDetail` | One panel: summary, chart, latest values, limits |
-| 7 | `AlertList` | Open alerts with an **Acknowledge** button |
-| 8 | `About` | What PanelWatch is, the system diagram, your name |
+| 9 | `DeviceList` | The three panels — the home page |
+| 10 | `DeviceDetail` | One panel: summary, chart, latest values, limits |
+| 11 | `AlertList` | Open alerts with an **Acknowledge** button |
+| 12 | `About` | What PanelWatch is, the system diagram, your name |
 
 3. **Navigation bar (by hand):** on `DeviceList`, `AlertList` and `About`, turn on **Show on Nav Bar**
    with icons and labels *Panels*, *Alerts*, *About*. Set `DeviceList` as the **Initial Page**
    (**Settings → App Details**).
+
+> **Each generation uses one of your 50 monthly AI generations** — read the prompt through before you
+> send it. Every prompt is here with a table explaining why it's written that way; the four rules from
+> Day 1 still apply (name the data, say what not to build, one thing at a time, check the draft).
+
+**Two lines in every Day 2 prompt**
+
+| Part of the prompt | Why |
+|---|---|
+| *"Use the project theme colours only"* | You set the theme in step 1. Without this, each screen picks its own colours and the app looks stitched together |
+| Sample text like *"PNL-01"*, *"31.2"*, *"14:05:33"* | The designer can't see Firebase. Realistic sample text gives realistic sizes; you replace it with live data in Topics 6–8 |
+
+**Prompt 9 — DeviceList page**
+```text
+A mobile home screen for "PanelWatch", an app for factory supervisors who monitor three electrical
+panels. Use the project theme colours only.
+
+Top: an app bar with the title "PanelWatch" and a small subtitle "3 panels - live".
+Body: a vertical list of three panel cards. Each card shows a panel code like "PNL-01" in bold, a
+name like "Main Panel Level 1", a coloured status badge on the right ("Normal" green, "Warning"
+amber, "Critical" red), a row of four small values - temperature °C, voltage V, current A, power W -
+and "Last reading 14:05:33" in small grey text at the bottom.
+
+No search bar, no log-in, no floating action button.
+```
+
+| Part of the prompt | Why |
+|---|---|
+| *"for factory supervisors"* | Who uses it: someone walking the floor who needs status at a glance, not forms |
+| *"subtitle "3 panels - live""* | Tells the user the list updates itself — there's no refresh button |
+| *"a row of four small values"* | Only four of the six readings fit a phone card. The detail page shows all six |
+| *"No search bar, no log-in, no floating action button"* | Designers add these by habit. Three panels need none of them |
+
+**Prompt 10 — DeviceDetail page**
+```text
+A mobile detail screen for one electrical panel in the "PanelWatch" app. Use the project theme
+colours only.
+
+App bar with a back arrow and the panel code "PNL-01" as the title.
+Body, scrolling, in this order:
+1. A header card: the panel name, its location in grey, and a large status badge.
+2. A "Health summary" card with two or three lines of text.
+3. A grid of six small value tiles, two per row: Temperature °C, Humidity %, Voltage V, Current A,
+   Vibration mm/s, Power W.
+4. A card titled "Temperature - last 20 readings" with space for a line chart, 220 px high.
+5. A "Limits" card listing six read-only rows: Max temperature, Max humidity, Min voltage,
+   Max voltage, Max current, Max vibration, each with its value on the right.
+
+No edit buttons - this screen only shows information.
+```
+
+| Part of the prompt | Why |
+|---|---|
+| *"a back arrow and the panel code … as the title"* | The way back to the list, and which panel you're looking at |
+| *"in this order: 1–5"* | The reading order — status and summary first, details last |
+| *"last 20 readings … 220 px high"* | Matches the readings query (limit 20) in Topic 7, and keeps a fixed space for the chart |
+| *"read-only rows"*, *"No edit buttons"* | Limits are changed in the Bubble admin only. The phone shows; the admin edits |
+
+**Prompt 11 — AlertList page**
+```text
+A mobile screen titled "Open alerts" for the "PanelWatch" app. Use the project theme colours only.
+
+A vertical list of alert cards, newest first. Each card has a coloured strip on the left (amber for
+Warning, red for Critical), the panel code "PNL-02" in bold, the problem like "temperature 62.1 /
+limit 45", the time "18/10 14:07:10" in grey, a level badge, and an outlined "Acknowledge" button
+on the right.
+
+When there are no alerts, the screen shows a large green check icon and "No open alerts".
+No filters, no search bar.
+```
+
+| Part of the prompt | Why |
+|---|---|
+| *"newest first"* | Matches the alerts query you build in Topic 8 (time, descending) |
+| *"a coloured strip on the left"* | Shows how serious an alert is before you read a word |
+| *"an outlined "Acknowledge" button"* | The one action on this screen — the only write the app makes |
+| *"When there are no alerts … "No open alerts""* | An empty list looks broken. An empty state says "all clear" |
+| *"No filters, no search bar"* | At most 30 open alerts are shown — extras are clutter |
+
+**Prompt 12 — About page**
+```text
+A mobile "About" screen for "PanelWatch". Use the project theme colours only.
+
+1. The app name and one sentence: "PanelWatch shows live readings and alerts from the factory's
+   electrical panels."
+2. A simple diagram made of three boxes joined by arrows: "Panels (simulator)" -> "Firebase" ->
+   two boxes side by side, "Bubble admin" and "This app".
+3. A text field labelled "Your name" with the hint "Used when you acknowledge an alert".
+4. At the bottom in small grey text: "Built in the AI-Assisted App Development course".
+```
+
+| Part of the prompt | Why |
+|---|---|
+| *"one sentence: "…""* | The exact text. Left to itself, the AI writes a paragraph of marketing |
+| *"three boxes joined by arrows: … -> … ->"* | "A diagram" alone could be anything. Box by box, the AI draws what you mean |
+| *"A text field "Your name" with the hint …"* | Where the supervisor's name is kept (Topic 8). The hint says why it's asked for |
 
 **Catch the AI**
 - **Sample data** ("Device A", "25 °C") — fine; you connect live data in Topics 6–8.
 - **Extra features** you didn't ask for (search bars, log-in, settings) — delete them.
 - **Fixed sizes** that overflow on a small phone — use the Topic 1.2 rules: Expanded, or a max width.
 - **Its own colours** instead of the theme — ask again with "use the project theme only".
-
-**Save to your prompt library:** Prompts 5–8 as you finally used them.
 
 **Checkpoint ✅** Four consistent pages and a nav bar.
 
@@ -213,15 +307,15 @@ screen.
 
 **Goal:** reusable pieces the AI designs once and you use everywhere.
 
-1. **Components → add a component → Generate with Designer (AI)** for each:
+1. **Components → add a component → Generate with Designer (AI)** for each, with its prompt below:
 
 | Prompt | Component | Used on |
 |---|---|---|
-| 9 | `StatusBadge` | Everywhere a status or level appears |
-| 10 | `MetricTile` | Latest values on the list and detail pages |
-| 11 | `DeviceCard` | Each panel on `DeviceList` |
-| 12 | `AlertCard` | Each alert on `AlertList` |
-| 13 | `AcknowledgeSheet` | The bottom sheet for acknowledging an alert |
+| 13 | `StatusBadge` | Everywhere a status or level appears |
+| 14 | `MetricTile` | Latest values on the list and detail pages |
+| 15 | `DeviceCard` | Each panel on `DeviceList` |
+| 16 | `AlertCard` | Each alert on `AlertList` |
+| 17 | `AcknowledgeSheet` | The bottom sheet for acknowledging an alert |
 
 2. **Turn hard-coded text into parameters (by hand):** the AI writes fixed text like "PNL-01" and
    "31.2". Open each component → **Component Parameters** → add parameters, then bind the texts to them:
@@ -237,6 +331,54 @@ screen.
 3. **StatusBadge colour (by hand):** its background → **Conditional Value**: `status` equals
    `Critical` → red, `Warning` → amber, else green. Use `StatusBadge` inside `DeviceCard` and
    `AlertCard`.
+
+**Prompt 13 — StatusBadge**
+```text
+A small rounded pill badge component showing one word such as "Normal", "Warning" or "Critical",
+white bold text, 12 px horizontal padding, fully rounded corners. Green background by default.
+```
+
+**Prompt 14 — MetricTile**
+```text
+A small square tile component for one reading: a grey label on top ("Temperature"), a large bold
+number in the middle ("31.2"), and the unit next to the number in smaller text ("°C"). White card,
+rounded corners, light shadow. It should fit two per row on a phone.
+```
+
+**Prompt 15 — DeviceCard**
+```text
+A card component for one electrical panel: the code "PNL-01" in bold and the name "Main Panel
+Level 1" below it on the left, a status pill on the right, then a row of four compact values -
+temperature °C, voltage V, current A, power W - each with a small grey label, and "Last reading
+14:05:33" in small grey text at the bottom. Full width, rounded corners, light shadow, 16 px padding.
+```
+
+**Prompt 16 — AlertCard**
+```text
+A card component for one alert: a coloured strip on the left edge, the panel code "PNL-02" in bold,
+the line "temperature 62.1 / limit 45", the time "18/10 14:07:10" in small grey text, a level pill
+("Critical"), and an outlined "Acknowledge" button on the right. Full width, rounded corners.
+```
+
+**Prompt 17 — AcknowledgeSheet**
+```text
+A bottom sheet component for acknowledging an alert: a drag handle at the top, the title
+"Acknowledge alert", one line of grey text "This closes the alert for everyone.", a text field
+"Your name", and two buttons side by side - "Cancel" (outlined) and "Confirm" (filled).
+```
+
+**Why the component prompts are written this way**
+
+| Part of the prompt | Why |
+|---|---|
+| *"… component"* in every prompt | A reusable piece, not a page — designed once, used on every screen |
+| Exact sizes (*"12 px horizontal padding"*, *"16 px padding"*, *"fully rounded"*) | The same numbers in every component, so cards and badges line up |
+| Sample text (*"Normal"*, *"31.2"*, *"PNL-02"*) | Realistic sizes. In step 2 you turn each one into a parameter |
+| StatusBadge: *"Green background by default"* | One colour from the AI; you add Warning and Critical by hand in step 3 — a rule the AI could get wrong |
+| MetricTile: *"fit two per row on a phone"* | States the result: six tiles = three tidy rows |
+| AlertCard: *"an outlined "Acknowledge" button"* | Just the button. The page decides what it does, through `onAcknowledge` |
+| AcknowledgeSheet: *""This closes the alert for everyone.""* | The database is shared — the sheet warns before the write |
+| AcknowledgeSheet: *"Cancel (outlined) and Confirm (filled)"* | The safe choice looks quieter; the real action stands out |
 
 **Catch the AI**
 - **Every card a different size** — set the same padding and corner radius in the component, not on the
@@ -262,9 +404,9 @@ screen.
    (page parameter `device`, type **Document** → `devices`).
 
 **Try it**
-1. **Test mode** — three panels with real values. **Don't touch anything** for 15 seconds: the numbers
+1. **Test mode** — three panels with real values. **Don't touch anything** for 30 seconds: the numbers
    change by themselves.
-2. In your Bubble admin, **Send test event** → `high-vibration` to `PNL-02`. Within 15 seconds the
+2. In your Bubble admin, **Send test event** → `high-vibration` to `PNL-02`. Within 30 seconds the
    card turns **Critical** on the phone — no refresh.
 3. **Break it on purpose:** turn **Single Time Query** **on** → the values freeze. Turn it off again.
 
@@ -284,7 +426,7 @@ screen.
 2. Fill a row of `MetricTile`s from `device`: temperature °C, humidity %, voltage V, current A,
    vibration mm/s, power W.
 3. **Chart section with AI:** if the page has no good chart area, **Generate with Designer** with
-   **Prompt 14 — Chart section** and paste it in.
+   **Prompt 18** (below) and paste it in.
 4. **Readings query (by hand):** on the chart's parent → **Backend Query → Query Collection →
    `readings`**: filter `device_code` **equal to** `device.code`; order by `time` **descending**;
    limit **20**. (The trainer created the index for exactly this query.)
@@ -294,9 +436,23 @@ screen.
    `max_current`, `max_vibration` from `device` — read-only on the phone (they're changed in the Bubble
    admin).
 
+**Prompt 18 — Chart section** (only if the page needs one)
+```text
+A card section titled "Temperature - last 20 readings" with a small grey caption "Updates every
+30 seconds", containing a line chart 220 px high with a smooth line in the primary colour, light
+horizontal grid lines and no labels on the horizontal axis.
+```
+
+| Part of the prompt | Why |
+|---|---|
+| *"Updates every 30 seconds"* | Tells the user why the line moves — the simulator's interval |
+| *"220 px high"* | The same space Prompt 10 left for the chart |
+| *"no labels on the horizontal axis"* | The X axis is `time_unix` in milliseconds — its labels would be unreadable |
+| *"in the primary colour"* | The theme colour, like every other screen |
+
 **Try it**
 1. Tap `PNL-03`: its own chart and summary. Back; `PNL-01`: different data.
-2. Leave the page open: a new point joins the chart every 15 seconds.
+2. Leave the page open: a new point joins the chart every 30 seconds.
 3. **Break it on purpose:** change the order field from `time` to `humidity` → the query fails with a
    message that an **index is needed** — the same lesson as yesterday's `FAILED_PRECONDITION`. Put it
    back. (Don't create the index yourself — the project is shared.)
@@ -339,20 +495,52 @@ screen.
 
 **Goal:** plain-English tests that FlutterFlow's AI runs for you.
 
-1. Open **Test Pilot** and add the tests from **Prompt 15 — Tests**, one per line, e.g. *"Open the app.
-   The first screen shows three panels: PNL-01, PNL-02 and PNL-03."*
+1. Open **Test Pilot** and add the tests from **Prompt 19** (below), one at a time.
 2. **Run** them. Test Pilot builds the app, taps through it and shows screenshots for each step.
 3. Fix anything that fails, and run again.
+
+**Prompt 19 — Tests** (Test Pilot)
+```text
+1. Open the app. The first screen shows three panels: PNL-01, PNL-02 and PNL-03.
+2. Each panel card shows a status of Normal, Warning or Critical.
+3. Tap PNL-02. A screen titled PNL-02 opens and shows a health summary and a temperature chart.
+4. On the PNL-02 screen, tap the back arrow. The panel list is shown again.
+5. Tap Alerts in the bottom navigation bar. Either alert cards or the text "No open alerts" are shown.
+6. Tap About in the bottom navigation bar. The screen shows the text "Your name".
+```
+**Why it's written this way** — the data is live and shared, so the numbers always differ. Each test
+checks only what must **always** be true.
+
+| Part of the prompt | Why |
+|---|---|
+| One test per line | Test Pilot runs each one separately, so a failure points at one thing |
+| *"three panels: PNL-01, PNL-02 and PNL-03"* | Panel codes never change; their values do. Test the codes |
+| *"a status of Normal, Warning or Critical"* | Any of the three is correct with live data |
+| *"Either alert cards or the text "No open alerts""* | Both are correct. A test expecting cards fails the moment everyone has acknowledged |
+| Written as a person would act (*"Tap PNL-02"*, *"tap the back arrow"*) | Test Pilot works like a user: plain actions, then what you should see |
 
 **Catch the AI**
 - A test that **passes for the wrong reason** — look at the screenshots, not just the green tick.
 - A test that **acknowledges a real alert** — remember the data is shared; that's fine once, but say
   so to the room.
 
-> **If Test Pilot isn't available on your plan:** use your AI generations instead for **Prompt 16 —
-> Empty, loading and error states**: "No open alerts" with a check icon, a loading shimmer for the
-> panel list, and a "Can't reach the server" message. Put each on the right page with conditional
-> visibility.
+> **If Test Pilot isn't available on your plan:** use your AI generations instead for **Prompt 20**:
+> "No open alerts" with a check icon, a loading shimmer for the panel list, and a "Can't reach the
+> server" message. Put each on the right page with conditional visibility.
+
+**Prompt 20 — Empty, loading and error states** (fallback)
+```text
+Three small state components for a mobile app, using the project theme:
+1. "EmptyAlerts": a large green check icon and the text "No open alerts".
+2. "LoadingCards": three grey placeholder cards with a shimmer effect, the size of a panel card.
+3. "OfflineMessage": a cloud-off icon, "Can't reach the server", and a "Try again" button.
+```
+
+| Part of the prompt | Why |
+|---|---|
+| Names in quotes (*"EmptyAlerts"* …) | The names you'll look for in the component list |
+| *"the size of a panel card"* | The page doesn't jump when the real cards replace the placeholders |
+| *"a "Try again" button"* | An error message needs a way out |
 
 **Checkpoint ✅** A passing set of AI-run tests (or AI-designed empty, loading and error states).
 
@@ -373,7 +561,7 @@ screen.
 |---|---|
 | Package / bundle ID | Can't change after the first store release |
 | Icon and splash | ✅ today |
-| **Security** | Test-mode Firebase must become real rules + sign-in before any real data |
+| **Security** | Firebase without sign-in must get sign-in and per-user rules before any real data |
 | Privacy policy URL | Required by both stores |
 | **Android:** Google Play Console account (one-time fee) | FlutterFlow can deploy from the editor |
 | **iPhone:** Apple Developer Program (yearly fee) | Apple reviews every release |
@@ -387,7 +575,7 @@ screen.
 **Your requirement** — show the whole system working live:
 1. **Bubble admin** (laptop) and **PanelWatch Mobile** (phone — Android APK, emulator or iPhone web app)
    open side by side.
-2. From Bubble, **Send test event** → `overheating` to a panel. Within 15 seconds the phone shows it
+2. From Bubble, **Send test event** → `overheating` to a panel. Within 30 seconds the phone shows it
    **Critical**, with a new alert — without touching the phone.
 3. **Acknowledge** that alert on the phone. Press **Refresh** on the Bubble alerts page — it's gone,
    with your name.
@@ -397,6 +585,13 @@ screen.
 
 **Present for 5 minutes:** the live flow, your improvement and the prompt behind it, and one thing the
 AI got wrong and how you caught it.
+
+**Your capstone prompt** — use the same shape as the prompts above: **what it is**, **where it goes**,
+**what it shows**, and **what not to add**.
+```text
+
+```
+**What the AI got wrong, and how I caught it:**
 
 **Checkpoint ✅** Bubble → Firebase → phone → Firebase → Bubble, live, in front of the class.
 
@@ -410,11 +605,11 @@ AI got wrong and how you caught it.
   - live queries for panels, readings and open alerts; a temperature chart; an acknowledge action;
   - AI-run tests (or AI-designed empty, loading and error states);
   - an icon and splash, installed from your own APK or as an iPhone web app.
-- Your **prompt library** in `prompts.md`.
+- Your capstone prompt, and a note of what the AI got wrong.
 
 **Security recap**
-- Test mode means anyone with the project ID can change the data. Real apps need Firebase **security
-  rules** and **sign-in** — the next step after this course.
+- Without sign-in, rules can only limit **what** is changed, not **who** changes it. Real apps add
+  **sign-in** to the security rules — the next step after this course.
 - You never deployed rules or indexes to the shared project.
 
 **Extra, if you finish early**

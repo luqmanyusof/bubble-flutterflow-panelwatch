@@ -1,6 +1,6 @@
 {
   "name": "panelwatch-simulator",
-  "description": "PanelWatch: random sensor readings for the training course, every 15 seconds",
+  "description": "PanelWatch: random sensor readings for the training course, every 30 seconds",
   "private": true,
   "main": "index.js",
   "engines": { "node": "22" },

@@ -3,6 +3,11 @@
 Do this **at least 3 days before the course**, then do the dry run in `delivery-notes.md`. About an
 hour the first time. Participants never touch Firebase.
 
+**One backend for the whole class:** one Firebase project, one simulator, three panels
+(`PNL-01..03`), one set of collections. Participants get no device, endpoint or data of their own —
+every Bubble and FlutterFlow app reads and writes the same documents. Nothing here scales with class
+size except reads (section 6).
+
 ## 1. Create the project
 1. **console.firebase.google.com → Add project** → e.g. `panelwatch-class` (note the **project ID** —
    it may get a suffix, e.g. `panelwatch-class-3f9a1`). Google Analytics: off.
@@ -25,7 +30,7 @@ npm install -g firebase-tools
 firebase login
 cd trainer-only/firebase/functions
 npm install
-npm test                      # 12 tests must pass
+npm test                      # 13 tests must pass
 cd ..
 firebase deploy --only firestore,functions --project <PROJECT_ID>
 ```
@@ -33,13 +38,14 @@ firebase deploy --only firestore,functions --project <PROJECT_ID>
   which may be a different one.
 - First deploy: the CLI enables Cloud Functions, Cloud Build, Artifact Registry and Cloud Scheduler.
   If it asks for an **Artifact Registry clean-up policy**, accept the default (1 day).
-- **Before deploying, edit the date in `firestore.rules`** (`timestamp.date(2026, 12, 31)`) to a few
-  days after the course. After that date the database refuses all participant reads and writes.
+- **Before deploying, check the date in `firestore.rules`** (`open()`: now the end of 23 Oct 2026,
+  Malaysia time). After it, the database refuses every participant read and write. Change it for
+  each new class.
 - **What gets deployed:**
 
 | File | What it does |
 |---|---|
-| `firestore.rules` | Test mode for every collection, except `config` — participants can read it but can't write it |
+| `firestore.rules` | Allows only the course's actions (table in `firebase-api.md` 4.4): limits, resolve, test events, searches of 50 or fewer. No deletes, no other collections, `config` read-only. The project ID is in the public notes, so these are what stop abuse |
 | `firestore.indexes.json` | Two indexes: `readings` (device_code ↑, time ↓) and `alerts` (resolved ↑, time ↓). Indexes take a few minutes to build — **Firestore → Indexes** shows *Enabled* when done |
 | `functions/` | `simulateReadings` — runs every minute, writes one reading per panel every `interval_seconds` |
 
@@ -49,13 +55,13 @@ firebase deploy --only firestore,functions --project <PROJECT_ID>
 | Field | Type | Value |
 |---|---|---|
 | `enabled` | boolean | `true` |
-| `interval_seconds` | number | `15` (10–60; 20 or 30 halves the cost) |
+| `interval_seconds` | number | `30` (10–60; `60` halves the cost again — see section 6) |
 | `event_chance` | number | `0.05` (chance of a random event per panel per reading; `0` = only test events) |
 | `stop_at` | timestamp | the end of the class day, e.g. 18 Oct 2026 18:00 (UTC+8) |
 
 Within a minute the function creates `devices/PNL-01..03` and starts writing `readings`. Check:
-- **Firestore → Data:** `readings` grows by 3 every 15 seconds.
-- **Functions → simulateReadings → Logs:** `Tick 1/4: 3 devices, 0 command(s).`
+- **Firestore → Data:** `readings` grows by 3 every 30 seconds.
+- **Functions → simulateReadings → Logs:** `Tick 1/2: 3 devices, 0 command(s).`
 - Browser: `https://firestore.googleapis.com/v1/projects/<PROJECT_ID>/databases/(default)/documents/devices`
   returns three documents.
 
@@ -73,20 +79,32 @@ FlutterFlow connects to a Firebase project only if its service account can manag
 
 ## 6. Cost and quota
 
-| Per hour (15 s interval) | Writes | Reads |
-|---|---|---|
-| Simulator | ~1,440 (3 readings + 3 device updates every 15 s, plus alerts) | ~1,000 |
-| Bubble — 20 people, dashboard every 60 s | — | ~3,600 |
-| FlutterFlow — 20 people, live panel list | — | up to ~14,400 (every change to a panel = one read per open app) |
-
 The free allowance is **20,000 writes and 50,000 reads a day**, reset at midnight US Pacific time
-(**3 pm Malaysia** until early November, **4 pm** after). Day 2 can pass the free reads; on Blaze the
-extra costs well under RM 1 for the day. If you are worried, set `interval_seconds` to 30.
+(**3 pm Malaysia** until early November, **4 pm** after).
+
+| Per hour, 20 people, 30 s interval | Writes | Reads |
+|---|---|---|
+| Simulator (3 readings + 3 panel updates per tick, plus alerts) | ~750 | ~550 |
+| Bubble — dashboard every 60 s, plus Refresh presses (not affected by the interval) | a few | ~4,500 |
+| FlutterFlow — live lists: each panel update = one read **per open app** | a few | ~500 per open app: ~10,000 with one app each, 20,000–30,000 with two or three (phone, Test Mode and emulator each count) |
+
+- **Writes** stay far inside the allowance: ~6,000 for an 8-hour day.
+- **Day 1 reads** (Bubble): ~20,000. Inside the allowance.
+- **Day 2 reads** (FlutterFlow live, 14:00–17:00) are the only line that can pass 50,000 — when
+  people keep two or three copies of the app open. The 3 pm reset splits the afternoon in two.
+- **Watch it:** **Firestore → Usage** shows today's reads. Past ~35,000 before the reset, set
+  `interval_seconds` to `60` (live lists still update, once a minute) and ask the room to close
+  Test Mode tabs they aren't using.
+- **Passing the allowance doesn't stop anything** on Blaze — the extra reads cost a few US cents per
+  100,000. The design is nowhere near Firestore's hard limits (1 write a second per document; the
+  busiest document, each panel, gets one every 30 s).
 
 ## 7. After the course
-1. `config/simulator` → `enabled: false`.
+1. `config/simulator` → `enabled: false`. The rules close on their own after 23 Oct, but the
+   simulator ignores rules — to remove it completely:
+   `firebase functions:delete simulateReadings --region asia-southeast1 --project panelwatch-class`.
 2. Either delete the project (**Project settings → Delete project**) or keep it for the next run with
-   the simulator off. Readings pile up (~11,000 a day while on); delete the `readings` and `alerts`
+   the simulator off. Readings pile up (~360 an hour while on); delete the `readings` and `alerts`
    collections before the next class if you want a clean start.
 3. Remove `firebase@flutterflow.io` and any participant accounts from IAM if you keep the project.
 

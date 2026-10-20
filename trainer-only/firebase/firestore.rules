@@ -1,18 +1,76 @@
 rules_version = '2';
-// PanelWatch training - TEST MODE: anyone with the project ID can read and write
-// every collection except `config` (the simulator switch, which only the trainer changes
-// from the Firebase console - the console and the Cloud Function ignore these rules).
-// Simulated data only. Change the date to a few days after the course ends.
-//
-// Firestore OR's matching rules together, so `config` must be excluded from the general
-// rule itself - a separate "allow write: if false" block would NOT stop a write the
-// general rule allows.
+// PanelWatch training - no sign-in, so these rules allow exactly what the course does and nothing
+// more. The project ID is public (it's in the notes), so anyone could call the API:
+//   - read the 3 panels, config, and readings/alerts at most 50 at a time (no bulk dumps)
+//   - devices: change only the six limits, as numbers in a sane range (a PATCH without updateMask
+//     is refused instead of wiping the panel)
+//   - alerts: change only resolved / acknowledged_by
+//   - commands: create a valid test event only
+//   - nothing can be deleted, and no other collection exists
+// The simulator (Cloud Function) and the Firebase console ignore these rules.
+// Everything closes at the end of 23 Oct 2026, Malaysia time - change open() for the next class.
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{collection}/{doc} {
-      allow read: if request.time < timestamp.date(2026, 12, 31);
-      allow write: if collection != 'config'
-                   && request.time < timestamp.date(2026, 12, 31);
+
+    function open() {
+      // 24 Oct 2026 00:00 Malaysia time (UTC+8)
+      return request.time < timestamp.date(2026, 10, 23) + duration.value(16, 'h');
+    }
+
+    function smallList() {
+      return request.query.limit != null && request.query.limit <= 50;
+    }
+
+    function shortText(v) {
+      return v is string && v.size() <= 40;
+    }
+
+    function between(v, lo, hi) {
+      return v is number && v >= lo && v <= hi;
+    }
+
+    function changes() {
+      return request.resource.data.diff(resource.data).affectedKeys();
+    }
+
+    match /devices/{code} {
+      allow read: if open();
+      allow update: if open()
+        && changes().hasOnly(['max_temperature', 'max_humidity', 'min_voltage',
+                              'max_voltage', 'max_current', 'max_vibration'])
+        && between(request.resource.data.max_temperature, 0, 100)
+        && between(request.resource.data.max_humidity, 0, 100)
+        && between(request.resource.data.min_voltage, 0, 300)
+        && between(request.resource.data.max_voltage, 0, 300)
+        && between(request.resource.data.max_current, 0, 100)
+        && between(request.resource.data.max_vibration, 0, 50);
+    }
+
+    match /readings/{id} {
+      allow get: if open();
+      allow list: if open() && smallList();
+    }
+
+    match /alerts/{id} {
+      allow get: if open();
+      allow list: if open() && smallList();
+      allow update: if open()
+        && changes().hasOnly(['resolved', 'acknowledged_by'])
+        && request.resource.data.resolved is bool
+        && shortText(request.resource.data.acknowledged_by);
+    }
+
+    match /commands/{id} {
+      allow create: if open()
+        && request.resource.data.keys().hasOnly(['device_code', 'event', 'done', 'requested_by'])
+        && request.resource.data.device_code in ['PNL-01', 'PNL-02', 'PNL-03']
+        && request.resource.data.event in ['overheating', 'voltage-drop', 'current-spike', 'high-vibration']
+        && request.resource.data.done == false
+        && shortText(request.resource.data.get('requested_by', ''));
+    }
+
+    match /config/{id} {
+      allow read: if open();
     }
   }
 }

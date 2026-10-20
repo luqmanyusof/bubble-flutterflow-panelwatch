@@ -12,7 +12,7 @@
 ## What PanelWatch is
 
 ```text
-   Three panels (simulated in Firebase, a reading every 15 s)
+   Three panels (simulated in Firebase, a reading every 30 s)
                          |
                          v
                  +---------------+
@@ -64,14 +64,13 @@ Gemini, Copilot, or FlutterFlow's AI Agent Panel (it runs on outside AI accounts
 |---|---|
 | `README.md` | This overview |
 | `firebase-api.md` | The database: collections, fields, rules, and the REST calls Bubble uses |
-| `day1.md` | Day 1 — Bubble basics, then the PanelWatch admin |
-| `day2.md` | Day 2 — FlutterFlow basics, then PanelWatch Mobile |
-| `prompts.md` | Every AI prompt in the course, with space for your changes — your prompt library |
+| `day1.md` | Day 1 — Bubble basics, then the PanelWatch admin. Its AI prompts are in the topics that use them, each with why it's written that way |
+| `day2.md` | Day 2 — FlutterFlow basics, then PanelWatch Mobile, with its AI prompts the same way |
 | `trainer-only/` | Trainer files: Firebase setup, the simulator's code, delivery notes. Not needed by participants |
 
 ## Ground rules for a shared database
 - Everything you change, **everyone sees**. Resolve or acknowledge alerts you've seen; change limits
   only in the guided exercise.
-- The data is **simulated** and the project is in **test mode** (open to anyone with its ID). Never
-  put real names, phone numbers or company data in it.
+- The data is **simulated** and there's no sign-in — anyone with the project ID can use it, within
+  the rules in `firebase-api.md` 4.4. Never put real names, phone numbers or company data in it.
 - Never deploy Firestore rules or indexes from FlutterFlow.

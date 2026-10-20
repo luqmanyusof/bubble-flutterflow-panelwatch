@@ -30,18 +30,33 @@ const fakeDb = {
       },
     };
   },
-  batch() {
-    const ops = [];
-    return {
-      set(ref, data) { ops.push(() => store.set(ref.path, { ...data })); },
-      update(ref, patch) { ops.push(() => store.set(ref.path, { ...store.get(ref.path), ...patch })); },
-      async commit() { ops.forEach((op) => op()); },
-    };
-  },
 };
+// The low-level client the simulator writes through: decode its raw values back into the store
+const rawValues = []; // every value written, as sent
+const fromValue = (v) => {
+  rawValues.push(v);
+  if ('doubleValue' in v) return v.doubleValue;
+  if ('integerValue' in v) return Number(v.integerValue);
+  if ('stringValue' in v) return v.stringValue;
+  if ('booleanValue' in v) return v.booleanValue;
+  if ('timestampValue' in v) return new Date(v.timestampValue.seconds * 1000 + v.timestampValue.nanos / 1e6);
+  if ('arrayValue' in v) return v.arrayValue.values.map(fromValue);
+  return null;
+};
+class FakeFirestoreClient {
+  async getProjectId() { return 'test-project'; }
+  async commit({ database, writes }) {
+    for (const w of writes) {
+      const path = w.update.name.slice(`${database}/documents/`.length);
+      const data = Object.fromEntries(Object.entries(w.update.fields).map(([k, v]) => [k, fromValue(v)]));
+      if (w.currentDocument && w.currentDocument.exists && !store.has(path)) throw new Error(`NOT_FOUND ${path}`);
+      store.set(path, w.updateMask ? { ...store.get(path), ...data } : data);
+    }
+  }
+}
 const fakes = {
   'firebase-admin/app': { initializeApp() {} },
-  'firebase-admin/firestore': { getFirestore: () => fakeDb, FieldValue: { serverTimestamp: () => 'SERVER_TIME' } },
+  'firebase-admin/firestore': { getFirestore: () => fakeDb, v1: { FirestoreClient: FakeFirestoreClient } },
 };
 const realLoad = Module._load;
 Module._load = function (request, ...rest) {
@@ -58,6 +73,12 @@ test('first tick creates the 3 devices and writes 3 readings', async () => {
   assert.strictEqual(all('readings').length, 3);
   assert.ok(all('devices').every((d) => d.status === 'Normal' && d.last_reading_text !== '-'));
   assert.strictEqual(all('alerts').length, 0);
+});
+
+test('every number is written as doubleValue, even whole ones like the default limits', async () => {
+  assert.strictEqual(store.get('devices/PNL-01').max_temperature, 45);
+  assert.ok(rawValues.length > 0);
+  assert.ok(rawValues.every((v) => !('integerValue' in v)), 'no integerValue may be written');
 });
 
 test('a test event from the admin is applied once and marked done', async () => {

@@ -11,17 +11,17 @@ Firebase — the trainer runs the project. You only read and write data through 
 
 | | |
 |---|---|
-| **Project ID** | given by the trainer, e.g. `panelwatch-class` — written as `<PROJECT_ID>` below |
+| **Project ID** | `panelwatch-class` |
 | **Shared by** | the whole class — everyone sees the same three panels, readings and alerts |
 | **Writes** | the simulator (readings, alerts, latest values); Bubble admin (limits, resolving alerts, test events); FlutterFlow (acknowledging alerts) |
 | **Reads** | Bubble admin (REST API), FlutterFlow (built-in Firebase connection) |
-| **Security** | **test mode** — anyone who knows the project ID can read and write (except the simulator settings). Simulated data only — never real names, phone numbers or company data |
+| **Security** | **no sign-in** — anyone who knows the project ID can use it, so the rules allow only what the course does (section 4.4). Open until the end of 23 Oct 2026. Simulated data only — never real names, phone numbers or company data |
 
 ---
 
 ## 1. The simulator
 
-While the trainer has it switched on, the simulator writes **one reading for each panel every 15
+While the trainer has it switched on, the simulator writes **one reading for each panel every 30
 seconds**. Like a smart device (an "edge device"), it also applies the rules in section 3 — so every
 reading arrives with its power, status, alerts and a health summary already worked out.
 
@@ -32,7 +32,7 @@ reading arrives with its power, status, alerts and a health summary already work
 | `PNL-03` | Office Panel | Block B, Shah Alam |
 
 Now and then a panel has a random **event**: `overheating`, `voltage-drop`, `current-spike` or
-`high-vibration`. You can also **request** one (section 2.4) — it happens within 15 seconds, and the
+`high-vibration`. You can also **request** one (section 2.4) — it happens within 30 seconds, and the
 whole class sees it.
 
 ---
@@ -118,7 +118,7 @@ but only the trainer can change it.
 | Status | **Critical** if `temperature ≥ 60` or `vibration ≥ 7.1`; else **Warning** if out of limits; else **Normal** |
 | Alerts | one `alerts` document for each broken limit, `level` = Critical or Warning as above |
 | Summary | from the last 10 readings: average and highest temperature, current power, and an action (Critical → *Shut down the load and inspect now.*; Warning → *Check ventilation and connections.*; Normal → *No action needed.*) |
-| Limits | read from the `devices` document at every reading — a limit changed in Bubble applies within 15 seconds |
+| Limits | read from the `devices` document at every reading — a limit changed in Bubble applies within 30 seconds |
 
 ---
 
@@ -127,7 +127,7 @@ but only the trainer can change it.
 **Base URL** for every call:
 
 ```text
-https://firestore.googleapis.com/v1/projects/<PROJECT_ID>/databases/(default)/documents
+https://firestore.googleapis.com/v1/projects/panelwatch-class/databases/(default)/documents
 ```
 
 ### 4.1 How Firestore writes values
@@ -220,7 +220,18 @@ the number.
 ### 4.4 Rules worth remembering
 - **Always send `updateMask` with PATCH.** Without it, Firestore **replaces the whole document** with
   only the fields you sent — "change one limit" would wipe the panel's name, latest values and every
-  other limit, for the whole class.
+  other limit, for the whole class. (In PanelWatch the rules refuse such a PATCH with
+  `PERMISSION_DENIED` — in a project without rules, it would go through.)
+- **What the rules allow** — anything else returns **`PERMISSION_DENIED`**:
+
+| Collection | Read | Write |
+|---|---|---|
+| `devices` | yes | only the six limits, as numbers |
+| `readings` | one document, or a search with `limit` 50 or less | no |
+| `alerts` | one document, or a search with `limit` 50 or less | only `resolved` and `acknowledged_by` |
+| `commands` | no | create a test event (exactly the four fields in Body E) |
+| `config` | yes | no |
+
 - **Sorted searches need an index.** Bodies A and B filter on one field and sort on another; the
   trainer created those two indexes. Any new combination fails with **`FAILED_PRECONDITION: The query
   requires an index`**.
@@ -243,7 +254,9 @@ boolean → **Boolean**, timestamp → **DateTime**, array of numbers → **List
 - **Everything is shared.** When you resolve an alert, it disappears for everyone. When you change a
   limit, every app sees it. That's how a real control room works — so agree before you change things.
 - **Change limits only in the guided exercise** (Day 1, Topic 7), and put them back afterwards.
-- **Test events:** one request is enough — they arrive within 15 seconds.
+- **Test events:** one request is enough — they arrive within 30 seconds.
 - **Refresh sensibly in Bubble:** every 60 seconds at most on the dashboard, a **Refresh** button
   elsewhere. Every fetch costs one read per document returned.
+- **Close what you're not using.** Every open copy of your app reads on its own — a Bubble Preview tab
+  on its 60-second timer, a FlutterFlow Test Mode tab, the app on your phone. Keep one live copy open.
 - If calls fail with **429 / RESOURCE_EXHAUSTED**, tell the trainer.

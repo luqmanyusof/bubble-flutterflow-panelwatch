@@ -1,25 +1,71 @@
 // PanelWatch - the simulator that runs inside Firebase.
 // Every minute Cloud Scheduler starts this function; it writes one reading for each of the
-// three panels every `interval_seconds` (default 15) during that minute - but only while
+// three panels every `interval_seconds` (default 30) during that minute - but only while
 // config/simulator has `enabled: true` and the time is before `stop_at`.
 'use strict';
 
 const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { logger } = require('firebase-functions');
 const { initializeApp } = require('firebase-admin/app');
-const { getFirestore, FieldValue } = require('firebase-admin/firestore');
+const { getFirestore, v1 } = require('firebase-admin/firestore');
 const sim = require('./sim');
 
 initializeApp();
-const db = getFirestore();
+const db = getFirestore(); // reads
+const writer = new v1.FirestoreClient(); // writes - see newBatch()
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Firestore value with every number as a double. The normal SDK stores whole numbers (45, 29)
+// as integerValue and others as doubleValue, so a REST client like Bubble would see a field
+// switch between the two. firebase-api.md promises doubleValue, always.
+function toValue(v) {
+  if (typeof v === 'number') return { doubleValue: v };
+  if (typeof v === 'string') return { stringValue: v };
+  if (typeof v === 'boolean') return { booleanValue: v };
+  if (v instanceof Date) {
+    const ms = v.getTime();
+    return { timestampValue: { seconds: Math.floor(ms / 1000), nanos: (ms % 1000) * 1e6 } };
+  }
+  if (Array.isArray(v)) return { arrayValue: { values: v.map(toValue) } };
+  if (v === null || v === undefined) return { nullValue: 'NULL_VALUE' };
+  throw new Error(`Unsupported value: ${v}`);
+}
+
+function toFields(data) {
+  return Object.fromEntries(Object.entries(data).map(([k, v]) => [k, toValue(v)]));
+}
+
+// Same shape as db.batch() (set / update / commit), but commits through the low-level client
+let databasePath = null;
+function newBatch() {
+  const writes = [];
+  return {
+    set(ref, data) {
+      writes.push({ ref, data, update: false });
+    },
+    update(ref, patch) {
+      writes.push({ ref, data: patch, update: true });
+    },
+    async commit() {
+      if (writes.length === 0) return;
+      if (!databasePath) databasePath = `projects/${await writer.getProjectId()}/databases/(default)`;
+      await writer.commit({
+        database: databasePath,
+        writes: writes.map(({ ref, data, update }) => ({
+          update: { name: `${databasePath}/documents/${ref.path}`, fields: toFields(data) },
+          ...(update && { updateMask: { fieldPaths: Object.keys(data) }, currentDocument: { exists: true } }),
+        })),
+      });
+    },
+  };
+}
 
 async function loadConfig() {
   const snap = await db.doc('config/simulator').get();
   if (!snap.exists) return null;
   const c = snap.data();
-  const interval = Math.min(60, Math.max(10, Number(c.interval_seconds) || 15));
+  const interval = Math.min(60, Math.max(10, Number(c.interval_seconds) || 30));
   const eventChance = Math.min(1, Math.max(0, Number(c.event_chance ?? 0.05)));
   const stopAt = c.stop_at && typeof c.stop_at.toDate === 'function' ? c.stop_at.toDate() : null;
   return { enabled: c.enabled === true, interval, eventChance, stopAt };
@@ -28,7 +74,7 @@ async function loadConfig() {
 // Read the three devices (creating any that are missing); return them by code
 async function loadDevices() {
   const byCode = new Map();
-  const batch = db.batch();
+  const batch = newBatch();
   let created = 0;
   for (const template of sim.DEVICE_TEMPLATES) {
     const ref = db.collection('devices').doc(template.code);
@@ -59,17 +105,17 @@ async function tick(eventChance) {
   const devices = await loadDevices(); // re-read each tick, so limit changes apply at once
   const commands = await loadCommands();
   const forced = new Map(); // device code -> event
-  const batch = db.batch();
+  const batch = newBatch();
+  const now = new Date();
 
   for (const cmd of commands) {
     const c = cmd.data();
     const code = String(c.device_code || '').toUpperCase();
     const event = sim.EVENTS.includes(c.event) ? c.event : null;
     if (event && devices.has(code)) forced.set(code, event);
-    batch.update(cmd.ref, { done: true, done_at: FieldValue.serverTimestamp() });
+    batch.update(cmd.ref, { done: true, done_at: now });
   }
 
-  const now = new Date();
   for (const [code, { ref, data }] of devices) {
     let event = forced.get(code) || null;
     if (!event && Math.random() < eventChance) {
