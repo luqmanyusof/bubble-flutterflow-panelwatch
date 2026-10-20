@@ -7,7 +7,7 @@
 | **Length** | 2 days |
 | **Level** | Beginners to no-code; no programming needed |
 | **Language** | English |
-| **You build** | A **Bubble admin web app** (desktop and phone) and a **FlutterFlow mobile app** (Android, iPhone, emulator), both reading one **Firebase** database over its REST API |
+| **You build** | A **Bubble admin web app** (desktop and phone) and a **FlutterFlow mobile app** (Android APK, or a web app on iPhone and laptop), both reading one **Firebase** database over its REST API |
 
 ## What PanelWatch is
 
@@ -46,7 +46,7 @@ are explained in `firebase-api.md`. Everyone in the class shares the same three 
 | Day | Morning (by hand) | Afternoon (AI-led) |
 |---|---|---|
 | **1 — Bubble** | Bubble building blocks; the API Connector with a weather API; PanelWatch's data and API | Admin app laid out by **Bubble AI**, pages built with the **Agent**, one feature at a time: dashboard, device page (summary, readings history); an Enable / Disable switch by hand; publishing on the Free plan |
-| **2 — FlutterFlow** | FlutterFlow building blocks with a weather API; running an app on Android, in an emulator and on iPhone | Mobile app with **FlutterFlow AI** designing every screen and component and testing it with **Test Pilot**; live data and chart; disabled panels hidden; capstone demo |
+| **2 — FlutterFlow** | FlutterFlow building blocks with a weather API; running the app on Android and as a web app on iPhone | Mobile app with **FlutterFlow AI** designing every screen and component and testing it with **Test Pilot**; live data and chart; disabled panels hidden; capstone demo |
 
 ## What you need
 
@@ -56,7 +56,6 @@ are explained in `firebase-api.md`. Everyone in the class shares the same three 
 | **FlutterFlow** | **Basic** (paid, monthly) | 50 AI generations a month, APK download and web publishing |
 | **A laptop** | Chrome or Edge | Windows or Mac |
 | **A phone** | Android or iPhone | Android installs the APK; iPhone runs the web app |
-| **MuMu Player** | Free (Windows) | Only if you have no Android phone — runs the APK on your laptop |
 
 **AI rule:** only the AI built into Bubble and FlutterFlow. **No outside AI** — no ChatGPT, Claude,
 Gemini, Copilot, or FlutterFlow's AI Agent Panel (it runs on outside AI accounts).

@@ -87,7 +87,7 @@ The free allowance is **20,000 writes and 50,000 reads a day**, reset at midnigh
 |---|---|---|
 | Simulator (3 readings + 3 panel updates per tick, plus alerts) | ~750 | ~550 |
 | Bubble — dashboard every 60 s, plus Refresh presses (not affected by the interval) | a few | ~4,500 |
-| FlutterFlow — live lists: each panel update = one read **per open app** | a few | ~500 per open app: ~10,000 with one app each, 20,000–30,000 with two or three (phone, Test Mode and emulator each count) |
+| FlutterFlow — live lists: each panel update = one read **per open app** | a few | ~500 per open app: ~10,000 with one app each, 20,000–30,000 with two or three (phone, Test Mode and web app each count) |
 
 - **Writes** stay far inside the allowance: ~6,000 for an 8-hour day.
 - **Day 1 reads** (Bubble): ~20,000. Inside the allowance.

@@ -37,7 +37,7 @@ phone browser. Tomorrow you build the supervisors' **mobile app** in FlutterFlow
    └─────────────────────────────────────────────────────────────────────┘
             ▲ REST API (reads + enable)                ▲ built-in connection (live)
    Bubble admin system (today)                FlutterFlow mobile app (Day 2)
-   desktop + phone browser                    Android APK · emulator · iPhone web app
+   desktop + phone browser                    Android APK · iPhone/laptop web app
 ```
 
 An **IoT** (Internet of Things) system has four layers:
