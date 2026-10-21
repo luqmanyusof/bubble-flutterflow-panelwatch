@@ -8,7 +8,7 @@
 > to the phone: both show the same panels. The Firebase project ID: `panelwatch-class`.
 
 **Today's app:** supervisors on the factory floor see the three panels' status and latest readings,
-and each panel's summary and chart, refreshed every 30 seconds by itself. It's the **client** of
+and each panel's summary and chart — fresh each time a page opens. It's the **client** of
 yesterday's admin: when the admin disables a panel, the phone hides that panel's readings.
 
 **Your FlutterFlow plan: Basic**
@@ -128,75 +128,62 @@ the AI uses later: layout, styling, an API call, data on screen and navigation.
 
 ![What you'll build: the menu and three city pages](images/day2/2-test-cities.png)
 
-### 2.1 — Layout: the three rules
-FlutterFlow builds **Flutter** apps. Flutter layout follows three rules:
-1. A **parent tells its children how much space they may use**.
-2. **Children choose their size** within that.
-3. **The parent decides where they go**.
+> **How to follow this topic:** work in `Practice FF`. **One line = one click or one thing to type.**
+> Lost? Open the **Widget Tree** (left rail, 3rd icon) — it shows everything you've built so far.
+>
+> **Adding a widget inside another one:** in the **Widget Tree**, point at the parent's row (e.g.
+> *Column*) → click the **+** that appears on it → type the widget's name → click it. It goes exactly
+> where you mean — easier than dragging.
+>
+> ![The + on a Widget Tree row adds a child](images/day2/2-add-child.png)
 
-| Widget | Use it for |
-|---|---|
-| **Column** / **Row** | Stack children vertically / side by side |
-| **Container** | A box: padding, colour, rounded corners, a shadow, a fixed size |
-| **Image** | A picture from a web address (*Network*) or from your project (*Asset*) |
-| **ListTile** | A ready-made menu row: title, subtitle and an arrow |
-| **Expanded** | "Take the remaining space" inside a Row or Column |
+### 2.1 — The theme colour (1 minute)
+1. Left rail → click the **palette** icon (*Theme Settings*, second from the bottom).
+2. Click **Colors**.
+3. Click the **Primary** colour box.
+4. In **Choose a Color**, click the colour code box (next to **RGB**).
+5. Delete what's there and type `010066` (the blue of the Malaysian flag).
+6. Click **✕**. The **Primary** box turns dark blue — so will every app bar.
 
-Two ways to add a widget:
-- drag it from the **widget palette** onto the canvas, or
-- in the **Widget Tree**, click the **+** on the row of its parent (e.g. *Column*) → pick the widget.
-  It goes exactly where you mean — easier than dragging.
+![Choose a Color: type the code](images/day2/2-theme-colors.png)
 
-![The + on a Widget Tree row adds a child](images/day2/2-add-child.png)
+### 2.2 — The weather API call
+**Create it**
+1. Left rail → click **API Calls** (three linked circles).
+2. Click **+ Add** → **Create API Call**.
+3. **API Call Name** → type `getWeather`.
+4. **Method Type** → leave **GET**.
+5. **API URL** → paste:
 
-> **Tip:** the **Search properties…** box at the top of the properties panel filters the settings —
-> type `Path`, `title` or `Padding` instead of scrolling.
+   ```text
+   https://api.open-meteo.com/v1/forecast?latitude=[lat]&longitude=[lon]&current=temperature_2m
+   ```
+6. Click the **Variables** tab (below the URL).
+7. Click **+ Add Variable** → **Name** `lat` → leave **Type** *String* → **Default Value** `3.14`.
+8. Click **+ Add Variable** → **Name** `lon` → **Default Value** `101.69`.
+9. Click **Add Call**.
 
-### 2.2 — Style first: the theme
-A theme is the app's shared look. Change it once and every page follows.
-
-**Theme Settings** (the palette icon, second from the bottom of the left rail) → **Colors** → click
-**Primary** → type `#010066` (the blue of the Malaysian flag) → close. The app bars turn that blue
-at once.
-
-![Theme Settings → Colors → Primary](images/day2/2-theme-colors.png)
-
-| Styling | Where you set it | In this app |
-|---|---|---|
-| **Theme colours** | Theme Settings → Colors | Primary `#010066` — app bars, the temperature |
-| **Text style** | Text → **Theme Text Style** (*Title Large*, *Display Medium*, …) | The big temperature |
-| **Text colour** | Text → **Text Color** → a theme colour | Temperature in *Primary* |
-| **Size** | **Width** / **Height** (∞ = fill the space) | Photo and card full width |
-| **Rounded corners** | **Border Radius** | Photo and card, 16 |
-| **Shadow** | Container → **Elevation** | The card, 3 |
-| **Space** | **Padding** (inside), Column **Items Spacing** (between children) | 16 everywhere |
-
-### 2.3 — One weather call for every city
-The city changes, the call doesn't — so the **latitude and longitude become variables**.
-
-1. **API Calls** → **+ Add** → **Create API Call** → **API Call Name** `getWeather`, **Method Type**
-   *GET*, **API URL**:
-
-```text
-https://api.open-meteo.com/v1/forecast?latitude=[lat]&longitude=[lon]&current=temperature_2m
-```
-
-2. **Variables** tab → **+ Add Variable** twice: `lat` default `3.14`, `lon` default `101.69`
-   (Kuala Lumpur — used when you test). `[lat]` in the URL is replaced by the variable `lat`.
-   **Add Call**.
+   `[lat]` in the URL is filled from the variable `lat`. The defaults are Kuala Lumpur, used when you
+   test.
 
    ![The URL with [lat] and [lon], and the two variables](images/day2/2-call-variables.png)
-3. **Response & Test** → **Test API Call** → **Status: 200** and the Kuala Lumpur weather.
 
-   ![Test API Call](images/day2/1-3-test-response.png)
-4. Scroll to **JSON Paths** → **Recommended** → **+ Add JSON Path** next to
-   `$.current.temperature_2m` → **Name** it `temperature`. If its **Type** says *Integer* (the test
-   value happened to be whole), click it → **Double** → **Update**.
-5. Scroll to the bottom → **Save**. *Skip this and the JSON path is lost.*
+**Test it and pick the temperature**
 
-   ![The named path](images/day2/1-3-json-paths.png)
+10. Click the **Response & Test** tab (top).
+11. Click **Test API Call** → you see **Status: 200** and the Kuala Lumpur weather.
 
-### 2.4 — The first city page: Kuala Lumpur
+    ![Test API Call](images/day2/1-3-test-response.png)
+12. Scroll down to **JSON Paths** → click **Recommended** to open it.
+13. On the row `$.current.temperature_2m` → click **+ Add JSON Path**.
+14. Under **Selected**, click that row's **Name** box → type `temperature`.
+15. Look at its **Type**. If it says *Integer* → click it → **Double** → **Update**.
+16. Scroll to the very bottom → click **Save**. *Skip this and the JSON path is lost.*
+
+    ![The named path, type Double](images/day2/1-3-json-paths.png)
+
+### 2.3 — The first city page: Kuala Lumpur
+You need this table now and in 2.4:
 
 | City | Page name | Photo **Path** | `lat` | `lon` |
 |---|---|---|---|---|
@@ -206,70 +193,141 @@ https://api.open-meteo.com/v1/forecast?latitude=[lat]&longitude=[lon]&current=te
 
 *Photos: Wikimedia Commons. Keep the `500px-` size — other sizes are refused.*
 
-1. **The page:** **Page Selector** → **+** → **Add Page** → **Create Blank Page** → name `KualaLumpur`
-   → **Create Page**.
-2. **The title:** Widget Tree → **AppBar** → its **Text** → `Kuala Lumpur`.
-3. **The back arrow:** select the **AppBar** → turn on **Show Default Button** → **Default Button
-   Color** → *Secondary Background* (white, so it shows on the blue bar).
+**A. The page**
+1. Left rail → click **Page Selector** (2nd icon).
+2. Click **+** → **Add Page** → **Create Blank Page**.
+3. Type `KualaLumpur` → click **Create Page**.
 
-   ![AppBar: Show Default Button, in white](images/day2/2-back-button.png)
-4. **The photo:** **+** on the page's **Column** → **Image**. **Width** ∞, **Height** `220`, **Border
-   Radius** `16`, **Path** → the Kuala Lumpur address from the table.
+   > **HomePage stays as it is** — leave it for now. It is the page the app opens on, and in 2.5 it
+   > becomes the menu. **Folders don't matter:** the new page appears **below** the *pages* folder, not
+   > inside it. Leave it there — dragging it into *pages* is only tidying and changes nothing in the
+   > app. Ignore *Flutter*, *Android* and *iOS* below it.
 
-   ![The Image: full width, 220 high, rounded](images/day2/2-new-page-kl.png)
-5. **The card:** **+** on **Column** → **Container**. **Width** ∞, **Height** empty (it grows with its
-   content), **Border Radius** → one value for all corners → `16`, **Elevation** `3`, **Padding**
-   `16`. Inside it: **+** → **Column**, then **+** on that Column → **Text** twice.
-6. **The data:** select the page's **Column** (the top one) → **Backend Query** → **Add Query** →
-   **API Call** → `getWeather` → **+ Set Additional Variable**: `lat` = `3.14`, then `lon` = `101.69`
-   → **Confirm**.
+**B. The title and the back arrow**
 
-   ![The page's query, with lat and lon](images/day2/2-query-vars.png)
-7. **The temperature:** first Text → `Temperature now`. Second Text → the icon next to **Text** →
-   **Combine Text** → **Text 1** → its icon → **getWeather Response** → *Predefined Path*
-   `temperature` → **Confirm**; **Add Text** → **Text 2** ` °C` → **Confirm**. The canvas shows
-   `[1] °C` — the real value appears when you run the app.
+4. Left rail → click **Widget Tree** (3rd icon).
+5. Under **AppBar**, click **Text**.
+6. Properties panel → **Text** box → type `Kuala Lumpur`.
+7. In the Widget Tree, click **AppBar**.
+8. Turn on **Show Default Button**.
+9. Click **Default Button Color** → choose **Secondary Background** (white, so it shows on the blue).
 
-   ![Combine Text: the temperature, then °C](images/day2/2-temp-binding.png)
-8. **Style it:** that Text → **Theme Text Style** *Display Medium* → **Text Color** → *Primary*.
-   The page's top **Column** → **Padding** `16`, **Items Spacing** `16`.
+   ![AppBar: Show Default Button](images/day2/2-back-button.png)
 
-   ![Display Medium, in the Primary colour](images/day2/2-text-style.png)
+**C. The photo**
 
-### 2.5 — Two more pages, by copying
-1. With `KualaLumpur` open, click the **copy icon** next to the page name (top of the right panel) →
-   *Page duplicated successfully*. Everything is copied: the photo, the card, the query, the styling.
-2. **Rename** it: click the page's top line in the **Widget Tree** first, then change the name to
-   `JohorBahru`. (Right after duplicating, the name box ignores edits until you do.)
-3. **AppBar → Text** `Johor Bahru`; **Image → Path** → the Johor Bahru address.
-4. Page **Column** → **Backend Query** → **Edit** → `lat` `1.46`, `lon` `103.76` → **Confirm**.
+10. Widget Tree → **+** on the page's **Column** → type `Image` → click **Image**.
+11. **Width** → click the **∞** inside the box (it fills the width).
+12. **Height** → type `220`.
+13. **Border Radius** → type `16`.
+14. **Search properties…** (top of the panel) → type `Path` → paste the Kuala Lumpur photo address.
+
+    ![The Image: full width, 220 high, rounded](images/day2/2-new-page-kl.png)
+
+**D. The card**
+
+15. Widget Tree → **+** on the page's **Column** → **Container**.
+16. **Width** → click **∞**.
+17. **Height** → delete the number so the box is empty (the card grows with its content).
+18. **Border Radius** → `16`.
+19. **Elevation** → `3`.
+20. **Padding** → `16`.
+21. Widget Tree → **+** on the **Container** → **Column**.
+22. **+** on that new **Column** → **Text**.
+23. **+** on the same **Column** → **Text** again. You now have two Texts in the card.
+
+**E. The data**
+
+24. Widget Tree → click the **top Column** (the one directly under *KualaLumpur*).
+25. Properties panel → click the **Backend Query** tab (3rd icon at the top).
+26. Click **Add Query**.
+27. **Query Type** → **API Call**.
+28. **Select API Call** → **getWeather**.
+29. Click **+ Set Additional Variable** → **Parameter Name** → `lat` → **Value** → type `3.14`.
+30. Click **+ Set Additional Variable** → **Parameter Name** → `lon` → **Value** → type `101.69`.
+31. Click **Confirm**.
+
+    ![The page's query, with lat and lon](images/day2/2-query-vars.png)
+
+**F. The temperature on screen**
+
+32. Widget Tree → click the **first Text** in the card → **Text** box → type `Temperature now`.
+33. Click the **second Text**.
+34. Click the small icon next to **Text** (*set from variable*) → **Combine Text**.
+35. **Text 1** → click its small icon → **getWeather Response**.
+36. **Available Options** → **Predefined Path**.
+37. **Predefined Path Name** → **temperature** → **Confirm**.
+38. Click **Add Text** → **Text 2** → type ` °C` (a space, then °C).
+39. Click **Confirm**. The canvas shows `[1] °C` — the real number appears when you run the app.
+
+    ![Combine Text: the temperature, then °C](images/day2/2-temp-binding.png)
+
+**G. Style it**
+
+40. With the second Text still selected → **Theme Text Style** → **Display Medium**.
+41. **Text Color** → **Primary**.
+42. Widget Tree → click the **top Column** → **Padding** `16` → **Items Spacing** `16`.
+
+    ![Display Medium, in the Primary colour](images/day2/2-text-style.png)
+
+### 2.4 — Two more pages, by copying
+1. With `KualaLumpur` open → click the **copy icon** next to the page name (top of the properties
+   panel) → *Page duplicated successfully*. Everything is copied: photo, card, query, styling.
+2. Widget Tree → click the page's **top line** (the page name). *Right after copying, the name box
+   ignores typing until you do this.*
+3. Properties panel → page name box → type `JohorBahru`.
+4. Widget Tree → **AppBar** → **Text** → type `Johor Bahru`.
+5. Widget Tree → **Image** → **Path** → paste the Johor Bahru address.
+6. Widget Tree → **top Column** → **Backend Query** tab → **Edit**.
+7. `lat` **Value** → `1.46`. `lon` **Value** → `103.76`. → **Confirm**.
 
    ![Edit the copied query: Johor Bahru's lat and lon](images/day2/2-jb-query.png)
-5. Again from `JohorBahru` for **Perlis**.
+8. Open `KualaLumpur` again and repeat steps 1–7 for **Perlis** (`Perlis`, `6.44`, `100.20`).
 
    ![Duplicate the page, then change three things](images/day2/2-kl-page-editor.png)
 
-### 2.6 — The menu
+### 2.5 — The menu
 `HomePage` becomes the menu.
-1. **AppBar → Text** `Malaysia Weather`. Add a **Text** `Choose a city` to the Column.
-2. **+** on **Column** → search `ListTile` → **ListTile**. **Title** `Kuala Lumpur`, **Subtitle**
-   `Federal Territory` (type `title` in **Search properties** to find both).
-3. **Actions** tab → **+ Add Action** → **Navigate To** → **KualaLumpur**.
+1. **Page Selector** → click **HomePage**.
+2. Widget Tree → **AppBar** → **Text** → type `Malaysia Weather`.
+3. **+** on the page's **Column** → **Text** → type `Choose a city`.
+4. **+** on the page's **Column** → type `ListTile` → click **ListTile**.
+5. **Search properties…** → type `title` → **Title** `Kuala Lumpur` → **Subtitle** `Federal Territory`.
+6. Properties panel → click the **Actions** tab (2nd icon at the top).
+7. Click **+ Add Action** → **Navigate To** → **Select Page** → **KualaLumpur**.
 
    ![On Tap → Navigate To KualaLumpur](images/day2/2-navigate.png)
-4. Two more ListTiles the same way: `Johor Bahru` / `Johor` → **JohorBahru**; `Perlis` / `Kangar` →
-   **Perlis**.
+8. Repeat steps 4–7 twice:
+   - `Johor Bahru` / `Johor` → **JohorBahru**
+   - `Perlis` / `Kangar` → **Perlis**
 
    ![The menu in the editor](images/day2/2-menu-editor.png)
 
-### 2.7 — Run it
-**⚡ ▾** (top right) → **Test**. A new tab builds the app (about a minute). Tap each city: its photo,
-its name and its own live temperature. **←** goes back to the menu. **End Session** when done.
+### 2.6 — Run it
+1. Top right → click **⚡ ▾** → **Test**. A new tab builds the app (about a minute).
+2. Tap **Kuala Lumpur** → its photo, name and live temperature. Tap **←** to go back.
+3. Do the same for **Johor Bahru** and **Perlis** — each shows its own temperature.
+4. Click **End Session** when done.
 
 ![The Test menu](images/day2/1-3-test-menu.png)
 
 **Try it** — change the theme's **Primary** colour again: every app bar and every temperature change
 together. That's why styles live in the theme.
+
+### 2.7 — What you just used
+**Flutter layout, in three rules:** a parent tells its children how much space they may use;
+children choose their size within that; the parent decides where they go.
+
+| You used | Where | What it does |
+|---|---|---|
+| **Column** / **Row** | Page, card | Stack children vertically / side by side. *Items Spacing* = gap between them |
+| **Container** | The card | A box: padding, colour, rounded corners, shadow (*Elevation*) |
+| **Image** | The photo | A picture from a web address (*Network*) |
+| **ListTile** | The menu | A ready-made row: title, subtitle and an arrow |
+| **∞ Width** | Photo, card | Fill the space the parent gives. (*Expanded* does the same inside a Row) |
+| **Theme colour / Theme Text Style** | Primary, Display Medium | Set once, used everywhere |
+| **Backend Query** | Page Column | Where the data comes from — the API call |
+| **Combine Text** | Temperature | Live data + fixed text (` °C`) |
 
 **Checkpoint ✅** By hand: a theme, a layout of Image, Container and Text, an API call with variables,
 data on screen, three pages and a menu that navigates between them.
@@ -440,15 +498,15 @@ Background. Never use white text.
 Make ONE component named "PanelCard" with these parameters: code, name, status, temperature,
 voltage, current, power, lastReading (all String) and enabled (Boolean).
 PanelCard, top to bottom, in a card with 16 padding and 12 corner radius:
-1. A row: code in bold Primary colour on the left; status in a small Success-coloured pill on
-   the right.
+1. A row: code in bold Primary colour on the left; status on the right in a small pill with an
+   Accent 1 background and Primary Text.
 2. name, in Title Medium.
 3. A row of 4 equal columns: "Temp" above temperature + " °C", "Voltage" above voltage + " V",
    "Current" above current + " A", "Power" above power + " W".
 4. "Last reading " + lastReading, small, in Secondary Text.
 5. When enabled is false: hide rows 3 and 4 and show "Disabled by the admin" in Secondary Text.
 
-Page: an app bar with the title "PanelWatch" and the subtitle "3 panels - live". Below it, a
+Page: an app bar with the title "PanelWatch" and the subtitle "3 panels". Below it, a
 Column of 3 PanelCards with sample values: "PNL-01", "Main Panel Level 1", "Normal", "31.2",
 "230", "12.5", "2875", "18/10 14:05:33", true.
 
@@ -459,8 +517,8 @@ Do not add: search, log-in, buttons, a floating button, images, other pages or o
 |---|---|
 | *"a row of 4 equal columns"* | Only four of the six readings fit a phone card. The detail page shows all six |
 | *"enabled (Boolean)"* and line 5 | The admin's Enable / Disable from Day 1: a disabled panel stays listed, its readings hidden |
-| *"subtitle "3 panels - live""* | Tells the user the list updates itself — every 30 seconds, no button |
-| *"Success-coloured pill"* | Green from the theme. Amber and red for Warning and Critical come in Topic 5 |
+| *"subtitle "3 panels""* | A plain subtitle. The list reloads each time the page opens — no timer to build |
+| *"a small pill with an Accent 1 background and Primary Text"* | One colour for every status — the word says Normal, Warning or Critical. Colour per status takes about 30 clicks of nested rules by hand, so we leave it out |
 
 **Prompt 7 — DeviceDetail page**
 ```text
@@ -477,7 +535,7 @@ Make exactly TWO components:
 Page, scrolling, top to bottom, 16 padding, 12 between sections:
 1. App bar: a back arrow and the title "PNL-01".
 2. Header card: "Main Panel Level 1" in Title Medium, "Factory A, Shah Alam" in Secondary Text,
-   and "Normal" in a Success-coloured pill on the right.
+   and "Normal" in a small pill with an Accent 1 background and Primary Text on the right.
 3. A card titled "Health summary" with the text "Status: Normal. Power now 1856 W. No action needed."
 4. Six ValueTiles, two per row: Temperature 31.2 °C, Humidity 66.0 %, Voltage 231.5 V,
    Current 8.2 A, Vibration 1.9 mm/s, Power 1898 W.
@@ -523,7 +581,10 @@ Do not add: images, icons, diagrams, buttons or other pages.
 **Catch the AI**
 - **Sample data** ("PNL-01", "31.2") — fine; you connect live data in Topics 5–6.
 - **Extra features** you didn't ask for (search bars, log-in, settings) — delete them.
-- **Fixed sizes** that overflow on a small phone — use the Topic 2.1 rules: Expanded, or a max width.
+- **Fixed sizes** that overflow on a small phone — use the Topic 2.7 rules: Expanded, or a max width.
+- **Text the same colour as its background** (in the dry run, the status word was green on a green
+  pill) — select the text → **Text Color** → if it shows a parameter name, **Remove**, then pick
+  **Primary Text**.
 
 **Checkpoint ✅** Three pages in one theme; `PanelCard`, `ValueTile` and `LimitRow` with their
 parameters; a nav bar with Panels and About; `DeviceList` opens first.
@@ -560,6 +621,12 @@ parameters; a nav bar with Panels and About; `DeviceList` opens first.
 | `power` | `$.fields.latest_power.doubleValue` |
 | `enabled` | `$.fields.enabled.booleanValue` |
 
+**The four numbers need one more setting.** For `temperature`, `voltage`, `current` and `power`:
+after the JSON path, the second **Available Options** → **To Data Type** → **Data Type** `String` →
+**Confirm**. Without it the card shows the whole panel record as text instead of the number.
+
+![Live temperatures on the cards in Test mode](images/day2/5-test-live-values.png)
+
 *(The screenshots below are from the dry run, before the prompt was rewritten — that card had
 `time` where yours has `lastReading`.)*
 
@@ -572,11 +639,12 @@ parameters; a nav bar with Panels and About; `DeviceList` opens first.
 
 ![DeviceList with live data in Test mode](images/day2/6-test-live-list.png)
 
-> **Still to finish here** (not in the dry run yet):
-> - **Status colours** — `PanelCard` → its status pill → **Background Color** → **Conditional
->   Value**: `status` equals `Critical` → *Error*, `Warning` → *Warning*, else *Success*.
-> - **Refreshing every 30 seconds** and pull-to-refresh.
-> - **Check** the four values and *Disabled by the admin* (line 5 of Prompt 6) with live data.
+**Fresh data:** the list loads each time the page opens — come back from a panel, or tap **Panels**
+in the nav bar, to see new readings. We keep it that way on purpose: an automatic timer is extra
+work by hand for little gain in class.
+
+> **Still to check** (not in the dry run yet): *Disabled by the admin* (line 5 of Prompt 6) with
+> live data.
 
 **Checkpoint ✅** `DeviceList` shows the three real panels from the API.
 
@@ -610,21 +678,21 @@ parameters; a nav bar with Panels and About; `DeviceList` opens first.
 
 **Prompt 9 — Chart section** (only if the page needs one)
 ```text
-A card section titled "Temperature - last 20 readings" with a small grey caption "Updates every
-30 seconds", containing a line chart 220 px high with a smooth line in the primary colour, light
+A card section titled "Temperature - last 20 readings" with a small grey caption "One reading
+every 30 seconds", containing a line chart 220 px high with a smooth line in the primary colour, light
 horizontal grid lines and no labels on the horizontal axis.
 ```
 
 | Part of the prompt | Why |
 |---|---|
-| *"Updates every 30 seconds"* | Tells the user why the line moves — the simulator's interval |
+| *"One reading every 30 seconds"* | Tells the user how far apart the points are — the simulator's interval |
 | *"220 px high"* | The same space Prompt 7 left for the chart |
 | *"no labels on the horizontal axis"* | The X axis is `time_unix` in milliseconds — its labels would be unreadable |
 | *"in the primary colour"* | The theme colour, like every other screen |
 
 **Try it**
 1. Tap `PNL-03`: its own chart and summary. Back; `PNL-01`: different data.
-2. Leave the page open: a new point joins the chart every 30 seconds.
+2. Go back and open `PNL-03` again a minute later: the chart has new points.
 3. Disable `PNL-03` in Bubble, then open it on the phone: only the header and *This panel is disabled
    by the admin.* Enable it again.
 4. **Break it on purpose:** change the order field from `time` to `humidity` → the query fails with a
@@ -751,11 +819,11 @@ as a web app — ready for the capstone.
 **Your requirement** — show the whole system working live:
 1. **Bubble admin** (laptop) and **PanelWatch Mobile** (phone — Android APK or web app)
    open side by side.
-2. The trainer sends an event to a panel. Within 30 seconds the phone shows it **Warning** or
-   **Critical** without being touched; press **Refresh** in Bubble and it shows the same.
+2. The trainer sends an event to a panel. Wait 30 seconds, then reopen the list on the phone (tap
+   **Panels**): it shows **Warning** or **Critical**; press **Refresh** in Bubble and it shows the same.
 3. Open that panel on both: the same summary, and the same newest reading at the top.
-4. **Admin → client:** press **Disable panel** in Bubble. The phone hides that panel's readings
-   within a second; **Enable panel** brings them back.
+4. **Admin → client:** press **Disable panel** in Bubble, then reopen the list on the phone: that
+   panel's readings are hidden. **Enable panel** and reopen: they're back.
 5. **One improvement built with FlutterFlow AI** — e.g. a power trend card (**Generate with Designer**),
    a read-only limits card, a dark theme, or an "Offline" banner when `last_reading_at` is
    older than a minute.

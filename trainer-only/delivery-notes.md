@@ -81,7 +81,7 @@ Participants can't change a panel's status, so status changes come from two plac
   Set `0` for a calm room and send events yourself.
 - **A demo event:** Firestore → **Data** → `commands` → **Add document** (Auto-ID) with
   `device_code` (string) `PNL-02`, `event` (string) `overheating`, `done` (boolean) `false`. Within
-  30 seconds `PNL-02` turns **Critical** in every app. Other events: `voltage-drop`, `current-spike`,
+  30 seconds `PNL-02` turns **Critical** (Bubble: press Refresh; phones: reopen the list). Other events: `voltage-drop`, `current-spike`,
   `high-vibration`. The console ignores the database rules, so this works even though participants
   can't do it.
 - **Changing a limit** (e.g. `devices/PNL-02` → `max_temperature` → `33` turns it **Warning**): the
