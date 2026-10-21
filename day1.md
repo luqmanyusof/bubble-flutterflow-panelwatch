@@ -804,19 +804,19 @@ practice app `practice-bubble-<yourname>` — not the PanelWatch admin.
 **What you build**
 - **Page `countries`** — a list of 3 or more countries (name, capital, currency).
 - **Page `country`** — opens when you click a country. It shows the currency, **today's rate from
-  MYR** (e.g. *1 MYR = 38.77 JPY*) and the **weather in its capital** now.
+  MYR** (e.g. *1 MYR = 38.73 JPY*) and the **weather in its capital** now.
 
 ### 9.1 — The two APIs (free, no key, no sign-up)
 
 | Call | Use as | URL | Test value | Field you need |
 |---|---|---|---|---|
-| `Rate` | Data | `https://hexarate.paikama.co/api/rates/latest/MYR?target=[currency]` | `currency` = `JPY` | `data mid` — 1 MYR in that currency |
+| `Rate` | Data | `https://api.frankfurter.dev/v2/rates?base=MYR&quotes=[currency]` | `currency` = `JPY` | `rate` — 1 MYR in that currency |
 | `CityWeather` | Data | `https://api.open-meteo.com/v1/forecast?latitude=[lat]&longitude=[lon]&current=temperature_2m,relative_humidity_2m` | `lat` = `35.69`, `lon` = `139.69` | `current temperature_2m`, `current relative_humidity_2m` |
 
 Open the first URL in your browser with `JPY` in place of `[currency]` to see what comes back:
 
 ```json
-{"status_code":200,"data":{"base":"MYR","target":"JPY","mid":38.7751,"unit":1,"timestamp":"…"}}
+[{"date":"2026-10-21","base":"MYR","quote":"JPY","rate":38.73}]
 ```
 
 ### 9.2 — The countries
@@ -828,8 +828,8 @@ Open the first URL in your browser with `JPY` in place of `[currency]` to see wh
 | Thailand | Bangkok | `THB` | 13.75 | 100.50 |
 | United Kingdom | London | `GBP` | 51.51 | -0.13 |
 
-Want another? Its currency code is the 3-letter ISO code (`IDR`, `USD`, `AUD`…). Get its capital's
-`lat`/`lon` from `https://geocoding-api.open-meteo.com/v1/search?name=Jakarta&count=1`.
+Want another? Pick a currency from the ~30 on `https://api.frankfurter.dev/v1/currencies` (`IDR`,
+`USD`, `AUD`, `KRW`… — not every currency is there). Get its capital's `lat`/`lon` from `https://geocoding-api.open-meteo.com/v1/search?name=Jakarta&count=1`.
 
 ### 9.3 — How to build it (the plan, not the clicks)
 1. **The data** — a data type `Country` with the five fields above (text, text, text, number,
@@ -852,17 +852,19 @@ Want another? Its currency code is the 3-letter ISO code (`IDR`, `USD`, `AUD`…
   Tokyo?"* bug. *(Topic 5.3)*
 - **Initialize** after any change to a call; until then it shows red.
 - **Set the group's Type of content first** — until then *Parent group's…* isn't offered.
-- **Round the rate:** `… data mid :formatted as` → 4 decimals. `0.313038` reads better as `0.3130`.
-- **Wrong currency code = error.** `XXX` or `jpy` in lower case returns an error, not a rate — type
+- **The rate comes back as a list** (note the `[ ]`) with one item. Use `… :first item's rate` — it's
+  a list like the readings in Topic 7.2.
+- **Round the rate:** `… rate :formatted as` → 4 decimals. `0.31319` reads better as `0.3132`.
+- **Wrong currency code = error.** `XXX`, or one not on the list, returns *invalid currency* — type
   codes in capitals.
-- **The rate is the mid-market rate**, updated through the day — not what a bank or money changer
-  gives you.
+- **The rate is the European Central Bank's reference rate**, updated once each working day — not
+  what a bank or money changer gives you.
 - **Negative numbers are fine:** London's longitude is `-0.13`.
 - Stuck on an expression? Look at how you did the same thing in the PanelWatch admin — it's the same
   pattern with different names.
 
 **Stretch**
-- *100 MYR = …* — multiply the rate in the expression (`… data mid * 100`).
+- *100 MYR = …* — multiply the rate in the expression (`… rate * 100`).
 - A flag: add a text field with the flag emoji (🇯🇵) and show it in the list.
 - Colour the temperature red when it's above 30 °C (a **Conditional**, Topic 2.5).
 - A **Back** button on the `country` page → **Go to page** `countries`.
