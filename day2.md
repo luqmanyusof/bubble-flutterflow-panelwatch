@@ -1131,8 +1131,11 @@ as a web app — ready for the capstone.
    Yours must be different from everyone else's — add your name.
 
 ### 8.2 — Android: download and install your APK
-1. **`</>`** (top bar) → **Download APK**. The build takes a few minutes; you get a `.apk` (Android
-   Package) file.
+1. Top bar, right side → the **`</>`** icon (no label — between the branch icon and ↗) → the
+   **Developer Menu** opens → **Download APK** (the green Android icon, near the bottom). The build
+   takes a few minutes; you get a `.apk` (Android Package) file.
+
+   ![</> → Developer Menu → Download APK](images/day2/8-download-apk.png)
 2. Send it to your phone (USB cable, Google Drive, or email to yourself), open it, allow **Install
    unknown apps** when Android asks → **Install**.
 
