@@ -46,7 +46,7 @@ are explained in `firebase-api.md`. Everyone in the class shares the same three 
 | Day | Morning (by hand) | Afternoon (AI-led) |
 |---|---|---|
 | **1 — Bubble** | Bubble building blocks; the API Connector with a weather API; PanelWatch's data and API | Admin app laid out by **Bubble AI**, pages built with the **Agent**, one feature at a time: dashboard, device page (summary, readings history); an Enable / Disable switch by hand; publishing on the Free plan |
-| **2 — FlutterFlow** | FlutterFlow building blocks with a weather API; running the app on Android and as a web app on iPhone | Mobile app with **FlutterFlow AI** designing every screen and component and testing it with **Test Pilot**; live data and chart; disabled panels hidden; capstone demo |
+| **2 — FlutterFlow** | FlutterFlow building blocks with a weather API; running the app on Android and as a web app on iPhone | Mobile app with **FlutterFlow AI** designing every screen and component; live data and chart; disabled panels hidden; capstone demo |
 
 ## What you need
 

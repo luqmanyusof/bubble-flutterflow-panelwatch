@@ -736,7 +736,7 @@ edit shows up for everyone who has it — edit with care.
 
 ### 8.1 — Your app's link
 1. **Preview** (▷, top right) opens the development version. Copy the address up to and including
-   `version-test/` — e.g. `https://panelwatch-admin-aisyah.bubbleapps.io/version-test/`.
+   `version-test/` — e.g. `https://panelwatch-admin-<yourname>.bubbleapps.io/version-test/`.
 2. Open it in a **private / incognito** window: the dashboard loads without signing in to Bubble.
    That's what anyone you send it to will see.
 

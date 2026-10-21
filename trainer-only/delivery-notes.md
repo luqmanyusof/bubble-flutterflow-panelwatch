@@ -22,9 +22,8 @@
 | **Bubble AI credits** — a fresh Free account's 500 cover Prompts 2–5 (the dry run had 231 left after them) | Anyone below ~100 builds Topic 7.2 by hand (route B) |
 | **Topic 7.2 by hand** (route B) on a clean page — drag the repeating group, the filter, the one-text row | Fix the steps in `day1.md` 7.2 B; route A (Prompt 5) is checked |
 | **Password protection on the Free plan** (Settings → General, marked "test for free") — does it lock the `version-test` link? | If it does, add it to Day 1 T8.3 as a step (it's the fix for "anyone with the link"); if not, leave T8.4 as it is |
-| **Prompts 6–8 as rewritten** (detailed, named components) — one fresh project, one run each | Check the 3-point list in T4 step 3; where the AI ignores a line, tighten that line in `day2.md` |
-| **Test Pilot on FlutterFlow Basic** | Use Prompt 11 (empty, loading and error states) — already in the notes as the fallback |
-| **FlutterFlow API calls with the proxy off** (Day 2, T3) work in Test mode *and* in the installed APK / web app | If the APK fails, turn **Use Proxy for Run/Test Mode** back on for Test mode only and retest |
+| **Day 2 Prompts 1–3 as rewritten** (detailed, named components) — one fresh project, one run each | Check the "Check" steps in T5.2–5.4; where the AI ignores a line, tighten that line in `day2.md` |
+| **FlutterFlow API calls with the proxy off** (Day 2, T4) work in Test mode *and* in the installed APK / web app | If the APK fails, turn **Use Proxy for Run/Test Mode** back on for Test mode only and retest |
 | **Web publish** works and the app opens from the home screen on an iPhone, and installs from Chrome/Edge on a laptop | iPhone users run the app in Safari without adding it to the home screen, or in the laptop browser |
 | **APK download** on Basic, and it installs on an Android phone | Use the web app on the phone |
 
@@ -54,11 +53,11 @@
 | 09:00 | UI tour (T1) — on the projector: the five areas, the left rail, Test |
 | 09:30 | Malaysia Weather practice app (T2) — theme, one city page, duplicate twice, the menu |
 | 10:30 | Break |
-| 10:45 | The three API calls (T3) — the proxy switches are the usual stumbling block; give it the full 30 min |
-| 11:15 | Design with AI: three pages and their components (T4) — theme first; walk the room after each generation for the 3-point check |
+| 10:45 | FlutterFlow's other tools (T3) — a 20-minute projector demo, nothing to build: code viewer, custom code, Storyboard, the two AI agents |
+| 11:05 | The three API calls (T4) — the proxy switches are the usual stumbling block; give it the full 30 min |
+| 11:35 | Design with AI: the card, two pages and the nav bar (T5) — theme first; walk the room after each generation for the 3-point check |
 | 13:00 | Lunch |
-| 14:00 | Panel list (T5), detail page (T6) |
-| 15:00 | Tests with AI (T7) |
+| 14:00 | Panel list (T6), detail page (T7) — T7 is the longest by-hand part (about 15 bindings); give it the time |
 | 15:30 | Break — first everyone does T8.1 and starts the APK build (T8.2); it takes minutes |
 | 15:45 | Publish and install (T8) — APK on Android, web app for everyone else; anyone stuck falls back to Test mode |
 | 16:15 | Capstone demos (T9) — you send the event each demo needs |
@@ -70,7 +69,8 @@ Two different fields are both called `enabled`:
 - `devices/PNL-0x` → `enabled`: the **admin's** switch — Bubble's *Disable panel* writes it, and the
   FlutterFlow app hides that panel's readings when it's `false`. Readings keep coming either way.
 
-Any participant can disable any panel, and it disappears from every phone in the room. Before T7.3,
+Any participant can disable any panel, and its readings vanish from every phone in the room (the card
+stays, with *Disabled by the admin*). Before T7.3,
 agree on **PNL-03** for testing, and remind them to switch it back on. A panel left disabled: press
 **Enable panel** in any Bubble admin, or in the console set `devices/PNL-0x` → `enabled` (boolean) →
 `true`. The console saves a boolean correctly, so this one is safe to edit by hand.
@@ -81,7 +81,7 @@ Participants can't change a panel's status, so status changes come from two plac
   Set `0` for a calm room and send events yourself.
 - **A demo event:** Firestore → **Data** → `commands` → **Add document** (Auto-ID) with
   `device_code` (string) `PNL-02`, `event` (string) `overheating`, `done` (boolean) `false`. Within
-  30 seconds `PNL-02` turns **Critical** (Bubble: press Refresh; phones: reopen the list). Other events: `voltage-drop`, `current-spike`,
+  30 seconds `PNL-02` turns **Critical** (Bubble: press Refresh; phones: tap About, then Panels). Other events: `voltage-drop`, `current-spike`,
   `high-vibration`. The console ignores the database rules, so this works even though participants
   can't do it.
 - **Changing a limit** (e.g. `devices/PNL-02` → `max_temperature` → `33` turns it **Warning**): the
@@ -103,7 +103,7 @@ Participants can't change a panel's status, so status changes come from two plac
 | `429 / RESOURCE_EXHAUSTED` | Billing not on Blaze (Spark stops at the free allowance) | Check Billing is Blaze; set `interval_seconds` to `60` |
 | Reads climbing fast (Firestore → Usage) | Many open FlutterFlow apps, or Bubble tabs left on the 60 s timer | `interval_seconds` → `60`; ask the room to close Test Mode and old Bubble Preview tabs |
 | Bubble list doesn't change | No `X-Refresh`/`tick` | Topic 6.1 |
-| FlutterFlow: card titles or text empty | The AI used the white *Info* colour, or a component's colour setting nothing fills | Theme → Info `#12151C` (Day 2 T4 step 1.2); in the component, Text Color → **Remove** (or → Primary Text) |
+| FlutterFlow: card titles or text empty | The AI used the white *Info* colour, or a component's colour setting nothing fills | Theme → Info `#12151C` (Day 2 T5.1 step 2); in the component, Text Color → **Remove** (or → Primary Text) |
 | FlutterFlow: nav bar missing in Test | Test session started before the nav bar was switched on | **Hot Restart** (circular arrow, top right of the Test tab) |
 | APK won't install | Phone blocks unknown apps | Use the web app on the same phone |
 
