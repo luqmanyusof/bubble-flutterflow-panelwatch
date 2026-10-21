@@ -44,7 +44,7 @@
 | 15:00 | Device page (T7) — send a demo event (below) so the room sees a status change |
 | 15:45 | Break |
 | 16:00 | Enable / Disable (T7.3) |
-| 16:20 | Publish (T8) — the development link on phones, swap with a neighbour; then extras or catch-up |
+| 16:20 | Publish (T8) — the development link on phones, swap with a neighbour; then T9 self-practice (Country app) or catch-up — T9 is homework for anyone who runs out of time |
 | 16:45 | Wrap-up; everyone closes their Bubble Preview tabs (the 60 s timer keeps reading); all three panels enabled; `config/simulator` → `enabled: false` |
 
 ### Day 2 — FlutterFlow
